@@ -40,10 +40,13 @@ export class RethinkDBObservable<T extends IRethinkObject> {
         return new Observable();
     }
     
-    subscribe (obs: { next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void }): Subscription {                
-        
+    /**
+     * @description Subscribe to BehaviorSubject passing the observer to subscription
+     * @param obs: { next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void }
+     */
+    subscribe(obs: { next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void }): Subscription {                
+        // Just to make sure
         this.unsubscribe();
-        
         this.dbSubscription = this.db$.asObservable()
             .subscribe(
                 nextValue => obs.next(nextValue),
@@ -58,6 +61,10 @@ export class RethinkDBObservable<T extends IRethinkObject> {
             this.dbSubscription.unsubscribe();
     }
     
+    /**
+     * @description Function to listen events back from nodejs + socketio
+     */
+    //<editor-fold defaultstate="collapsed" desc="private listenFromBackend ()comment">
     private listenFromBackend () {
         this.socket.on('Connection', (socket: SocketIOClient.Socket) => {
             socket.on('update', (data: {new_data: T, old_data: T}) => {
@@ -84,4 +91,5 @@ export class RethinkDBObservable<T extends IRethinkObject> {
             })
         })
     }
+    //</editor-fold>
 }
