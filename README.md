@@ -46,7 +46,7 @@ export class Component {
     obj: AngularRethinkDBObservable<IMyObjectType[]>;
 
     constructor(private ar: AngularRethinkDBService) {
-        this.obj = this.r.list('myTable');
+        this.obj = this.ar.list('myTable');
         this.obj.subscribe(data => console.log(data));
     }
 }
