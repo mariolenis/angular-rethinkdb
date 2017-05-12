@@ -43,15 +43,31 @@ interface IMyObjectType {
 })
 export class Component {
     ...
-    obj: AngularRethinkDBObservable<IMyObjectType[]>;
+    myTable: AngularRethinkDBObservable<IMyObjectType[]>;
 
     constructor(private ar: AngularRethinkDBService) {
-        this.obj = this.ar.list('myTable');
-        this.obj.subscribe(data => console.log(data));
+        
+        // Create you object from table
+        this.myTable = this.ar.list('myTable');
+
+        // Subscribe to your object and listen to data
+        this.myTable.subscribe(data => console.log(data));
+
+        // Push data to your myTable
+        let myNewData: IMyObjectType = {...};
+        this.myTable.push({});
+
+        // Delete data 
+        this.myTable.remove({ indexName:'id', indexValue: 'random-id' });
+
+        // Update data 
+        let myUpdatedData =  Object.assign({}, myNewData);
+        myUpdatedData.myProp = 'new value';
+        this.myTable.update(myUpdatedData);
     }
 }
 ```
-Any change on ```myTable``` will be published on subscribe method
+Any change on ```'myTable'``` will be published on subscribe method
 
 ## TODO
 [ SECURITY ] Authentication 
