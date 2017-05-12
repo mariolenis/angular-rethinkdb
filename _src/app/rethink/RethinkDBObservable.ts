@@ -81,7 +81,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     //<editor-fold defaultstate="collapsed" desc="private listenFromBackend ()">
     private listenFromBackend(socket: SocketIOClient.Socket): Observable<string> {
 
-        console.log(socket)
         return new Observable((o: Observer<string>) => {
             
             socket.on('disconnect', data => {
