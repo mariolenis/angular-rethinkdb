@@ -68,7 +68,7 @@ export class Component {
         this.myTable.update(myUpdatedData)
             .subscribe(
                 response => console.log(response),
-                error => console.warn(error) // This is triggered if myUpdatedData has o id as property
+                error => console.warn(error) // This is triggered if myUpdatedData has no id as property.
             );
     }
 }
