@@ -18,30 +18,30 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
     private API_URL: string;
     
-    constructor(config: IRethinkDBAPIConfig, private http$: Http, private table: string, filter?: IRethinkFilter) {
+    constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, filter?: IRethinkFilter) {
         
-        this.db     = config.database;
+        this.db      = this.config.database;
         this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');
         
         // Initialize object and creates the namespace
         this.initDBObject()
             .map(data => this.db$.next(data))
-            .flatMap(() => this.initSocketIO())
+            .map(() => io(this.API_URL))
+            .flatMap(socket => this.initSocketIO(socket))
             .flatMap(socket => this.listenFromBackend(socket))
             .subscribe();
     }
     
     private initDBObject(): Observable<T[]> {        
         // TODO: query table with filter
-        return this.http$.post(this.API_URL + '/api/list', {db: this.db, table: this.table})
+        return this.http$.post(this.API_URL + '/api/list', {db: this.db, table: this.table, api_key: this.config.api_key })
             .map(res => res.json());
     }
     
-    private initSocketIO(): Observable<SocketIOClient.Socket> {        
+    private initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {        
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
-            // Connect de socket to the host and join to room according to db
-            let socket = io(this.API_URL);            
-            socket.emit('join', JSON.stringify({db: this.db, table: this.table}));
+            // Connect de socket to the host and join to room according to db            
+            socket.emit('join', JSON.stringify({ db: this.db, table: this.table, api_key: this.config.api_key }));
             o.next(socket);
             o.complete();
         });
@@ -85,7 +85,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             
             socket.on('disconnect', (disconnMsg: string) => {
                 // Re join to room
-                socket.emit('join', JSON.stringify({db: this.db, table: this.table}));
+                this.initSocketIO(socket).subscribe();
             });
             
             socket.on('err', (errorMessage: string) => {
