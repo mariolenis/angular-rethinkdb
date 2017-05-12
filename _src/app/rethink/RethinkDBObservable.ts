@@ -83,10 +83,14 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
 
         return new Observable((o: Observer<string>) => {
             
-            socket.on('disconnect', data => {
+            socket.on('disconnect', (disconnMsg: string) => {
                 // Re join to room
                 socket.emit('join', JSON.stringify({db: this.db, table: this.table}));
-            })
+            });
+            
+            socket.on('err', (errorMessage: string) => {
+                this.db$.error(errorMessage);
+            });
             
             // Listen events fired to this.table
             socket.on(this.table, (predata: string) => {
@@ -97,11 +101,11 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                 // Current "state"
                 let db = this.db$.value;
 
-                // New
+                // New data
                 if (!data.old_val && !!data.new_val) 
                     this.db$.next([...db, data.new_val]);
 
-                // Update
+                // Update data
                 else if (!!data.old_val && !!data.new_val) {
                     this.db$.next([
                         ...db.filter(object => object.id !== data.old_val.id),
@@ -110,13 +114,14 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                     );
                 }
 
-                // Delete
+                // Delete data
                 else if (!!data.old_val && !data.new_val) {
                     this.db$.next([
                         ...db.filter(object => object.id !== data.old_val.id)
                     ])
                 }
             });
+            
             return () => {
                 socket.disconnect();
             }

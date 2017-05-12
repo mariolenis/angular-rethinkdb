@@ -3,6 +3,6 @@
 </h1>
 
 <div *ngFor="let msg of counter | async">
-    {{msg.nombre}} > {{msg.msg}}
+    <strong>{{msg.nombre}}</strong> said: <i>{{msg.msg}}</i>
 </div>
 

@@ -2,7 +2,7 @@
 This is an Angular module for RethinkDB NoSQL realtime database using Observables and Socket.io-client, this is based and influenced by AngularFire2 module created by 
 __David East__ so, thanks to him. 
 
-This is an In-Working development so apologies for the lack of documentation.
+This is an work in progress so apologies for the lack of documentation.
 
 ## Usage
 Here is a simple demo
