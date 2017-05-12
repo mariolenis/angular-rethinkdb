@@ -15,6 +15,7 @@ import { AppComponent } from './app.component';
     FormsModule,
     HttpModule,
     AngularRethinkDBModule.forRoot({
+        api_key: 'AAAA-BBBBB-CCCCC',
         database: 'flownter',
         host: 'http://localhost:3200'
     })
