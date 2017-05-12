@@ -14,17 +14,13 @@ import 'rxjs/add/operator/mergeMap';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
-    private http$: Http;
-    private table: string;
     private db: string;
     private db$ = new BehaviorSubject<T[]>([]);
     
     private API_URL: string;
     
-    constructor(config: IRethinkDBAPIConfig, http: Http, table: string, filter?: IRethinkFilter) {
+    constructor(config: IRethinkDBAPIConfig, private http$: Http, private table: string, filter?: IRethinkFilter) {
         
-        this.http$  = http;        
-        this.table  = table;
         this.db     = config.database;
         this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');
         

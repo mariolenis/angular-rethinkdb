@@ -13,13 +13,8 @@ export class RethinkDBAPIConfig implements IRethinkDBAPIConfig {
 export class AngularRethinkDBService {
     
     private r: {db: string, table: string, r: Object}[] = [];
-    private http$: Http;
-    private config: RethinkDBAPIConfig;
 
-    constructor( @Optional() config: RethinkDBAPIConfig, http$: Http ) {
-        this.config = config;
-        this.http$ = http$;
-    }
+    constructor( @Optional() private config: RethinkDBAPIConfig, private http$: Http ) {}
     
     list(table: string, filter?: IRethinkFilter): AngularRethinkDBObservable<any[]> {
         
