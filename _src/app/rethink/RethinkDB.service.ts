@@ -4,6 +4,7 @@ import {AngularRethinkDBObservable} from './RethinkDBObservable';
 import {IRethinkFilter, IRethinkDBAPIConfig} from './interfaces';
 
 export class RethinkDBAPIConfig implements IRethinkDBAPIConfig {
+    api_key: string
     database: string
     host?: string 
     port?: number
