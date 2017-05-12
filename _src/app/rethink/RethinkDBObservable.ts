@@ -9,7 +9,6 @@ import {IRethinkDBAPIConfig, IRethinkObject, IRethinkFilter, IRethinkResponse} f
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/delay';
 import 'rxjs/add/operator/mergeMap';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
