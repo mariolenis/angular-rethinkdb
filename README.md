@@ -1,14 +1,14 @@
 # angular-rethinkdb
 This is a angular module for RethinkDB realtime using Observables and Socket.io-client, this is based and influenced by AngularFire2 module created by 
-*David East* so, thanks to him. 
+__David East__ so, thanks to him. 
 
 This is a in-working development so apologies for the lack of documentation.
 
 ## Usage
 Here is a simple demo
 ### Module 1st
-In order to use this, you will need to build a backend seervice for RethinkDB, or you might use this one 
-[https://github.com/mariolenis/rethinkdb-daas]
+In order to use this, you will need to build a backend seervice for RethinkDB, __or__ you might use this one 
+https://github.com/mariolenis/rethinkdb-daas
 ```
 ...
 import {AngularRethinkDBModule} from 'angular-rethinkdb';
