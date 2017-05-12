@@ -65,12 +65,17 @@ export class Component {
         myUpdatedData.myProp = 'new value';
 
         // Then update at myTable
-        this.myTable.update(myUpdatedData);
+        this.myTable.update(myUpdatedData)
+            .subscribe(
+                response => console.log(response),
+                error => console.warn(error) // This is triggered if myUpdatedData has o id as property
+            );
     }
 }
 ```
-Any change on ```'myTable'``` will be published on subscribe method
+Any change on ```'myTable'``` will be published on subscribe method.
+__push__, __remove__, __uodate__ methods returns Observables to track the operation result
 
 ## TODO
-[ SECURITY ] Authentication 
-[ DOCUMENTATION ] All
+[ SECURITY ] Authentication.
+[ DOCUMENTATION ] All.
