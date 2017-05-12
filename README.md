@@ -55,7 +55,7 @@ export class Component {
 
         // Push data
         let myNewData: IMyObjectType = {...};
-        this.myTable.push({});
+        this.myTable.push(myNewData);
 
         // Delete data 
         this.myTable.remove({ indexName:'id', indexValue: 'random-id' });
