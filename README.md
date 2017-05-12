@@ -54,4 +54,5 @@ export class Component {
 Any change on ```myTable``` will be published on subscribe method
 
 ## TODO
-[SECURITY] Authentication 
+[ SECURITY ] Authentication 
+[ DOCUMENTATION ] All
