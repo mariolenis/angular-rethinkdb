@@ -1,4 +1,5 @@
 export interface IRethinkDBAPIConfig {
+    api_key: string,
     database: string
     host?: string, 
     port?: number
