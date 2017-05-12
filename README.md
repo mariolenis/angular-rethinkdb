@@ -9,7 +9,7 @@ Here is a simple demo
 ### Module 1st
 In order to use this, you will need to build a backend seervice for RethinkDB, __or__ you might use this one 
 https://github.com/mariolenis/rethinkdb-daas
-```
+```js
 ...
 import {AngularRethinkDBModule} from 'angular-rethinkdb';
 
@@ -30,7 +30,7 @@ export class AppModule { }
 ```
 
 ### Component Then
-```
+```js
 ...
 import {AngularRethinkDBService, AngularRethinkDBObservable} from 'angular-rethinkdb';
 
