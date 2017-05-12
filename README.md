@@ -74,8 +74,8 @@ export class Component {
 }
 ```
 Any change on ```'myTable'``` will be published on subscribe method.
-__push__, __remove__, __uodate__ methods returns Observables to track the operation result
+...__push__, __remove__, __uodate__ methods returns Observables to track the operation result
 
 ## TODO
 [ SECURITY ] Authentication.
-[ DOCUMENTATION ] All.
+...[ DOCUMENTATION ] All.
