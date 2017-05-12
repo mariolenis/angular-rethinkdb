@@ -47,22 +47,24 @@ export class Component {
 
     constructor(private ar: AngularRethinkDBService) {
         
-        // Create you object from table
+        // Initialize your object from table
         this.myTable = this.ar.list('myTable');
 
         // Subscribe to your object and listen to data
         this.myTable.subscribe(data => console.log(data));
 
-        // Push data to your myTable
+        // Push data
         let myNewData: IMyObjectType = {...};
         this.myTable.push({});
 
         // Delete data 
         this.myTable.remove({ indexName:'id', indexValue: 'random-id' });
 
-        // Update data 
+        // Modify data
         let myUpdatedData =  Object.assign({}, myNewData);
         myUpdatedData.myProp = 'new value';
+
+        // Then update at myTable
         this.myTable.update(myUpdatedData);
     }
 }
