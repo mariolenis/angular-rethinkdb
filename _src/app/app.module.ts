@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpModule } from '@angular/http';
 
+import {AngularRethinkDBModule} from './rethink/angular-rethinkdb';
 import { AppComponent } from './app.component';
 
 @NgModule({
@@ -12,7 +13,11 @@ import { AppComponent } from './app.component';
   imports: [
     BrowserModule,
     FormsModule,
-    HttpModule
+    HttpModule,
+    AngularRethinkDBModule.forRoot({
+        database: 'flownter',
+        host: 'http://localhost:3200'
+    })
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -1,28 +1,55 @@
+import {Http, Response} from '@angular/http';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Subscription} from 'rxjs/Subscription';
 import {Observable} from 'rxjs/Observable';
+import {Observer} from 'rxjs/Observer';
+import * as io from 'socket.io-client';
 
-interface IRethinkObject {
-    id?: string
-}
+import {IRethinkDBAPIConfig, IRethinkObject, IRethinkFilter, IRethinkResponse} from './interfaces'
 
-interface IRethinkResponse {
-    inserted: number;
-    replaced: number;
-    unchanged: number;
-    errors: number;
-    deleted: number;
-    skipped: number;
-    first_error: Error;
-    generated_keys: string[]; // only for insert
-}
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/delay';
+import 'rxjs/add/operator/mergeMap';
 
-export class RethinkDBObservable<T extends IRethinkObject> {
-    private dbSubscription: Subscription;
+export class AngularRethinkDBObservable<T extends IRethinkObject> {
+    
+    private http$: Http;
+    private table: string;
+    private db: string;
     private db$ = new BehaviorSubject<T[]>([]);
     
-    constructor (public socket: SocketIOClient.Socket) {
-        this.listenFromBackend();
+    private API_URL: string;
+    
+    constructor(config: IRethinkDBAPIConfig, http: Http, table: string, filter?: IRethinkFilter) {
+        
+        this.http$  = http;        
+        this.table  = table;
+        this.db     = config.database;
+        this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');
+        
+        // Initialize object and creates the namespace
+        this.initDBObject()
+            .map(data => this.db$.next(data))
+            .flatMap(() => this.initSocketIO())
+            .flatMap(socket => this.listenFromBackend(socket))
+            .subscribe();
+    }
+    
+    private initDBObject(): Observable<T[]> {        
+        // TODO: query table with filter
+        return this.http$.post(this.API_URL + '/api/list', {db: this.db, table: this.table})
+            .map(res => res.json());
+    }
+    
+    private initSocketIO(): Observable<SocketIOClient.Socket> {        
+        return new Observable((o: Observer<SocketIOClient.Socket>) => {
+            // Connect de socket to the host and join to room according to db
+            let socket = io(this.API_URL);            
+            socket.emit('join', JSON.stringify({db: this.db, table: this.table}));
+            o.next(socket);
+            o.complete();
+        });
     }
     
     push(newObject: T): Observable<IRethinkResponse> {
@@ -42,54 +69,66 @@ export class RethinkDBObservable<T extends IRethinkObject> {
     
     /**
      * @description Subscribe to BehaviorSubject passing the observer to subscription
-     * @param obs: { next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void }
+     * @param next?: (value: T[]) => void
+     * @param error?: (error: any) => void
+     * @param complete?: () => void
+     * @returns Subscription
      */
-    subscribe(obs: { next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void }): Subscription {                
-        // Just to make sure
-        this.unsubscribe();
-        this.dbSubscription = this.db$.asObservable()
-            .subscribe(
-                nextValue => obs.next(nextValue),
-                errValue  => obs.error(errValue),
-                () => obs.complete()
-            );
-        return this.dbSubscription;
-    }
-    
-    unsubscribe () {
-        if (!!this.dbSubscription && !this.dbSubscription.closed)
-            this.dbSubscription.unsubscribe();
+    subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
+        return this.db$.asObservable().subscribe(next, error, complete);
     }
     
     /**
      * @description Function to listen events back from nodejs + socketio
+     * @param socket: SocketIOClient.Socket
+     * @returns Observable
      */
-    //<editor-fold defaultstate="collapsed" desc="private listenFromBackend ()comment">
-    private listenFromBackend () {
-        this.socket.on('Connection', (socket: SocketIOClient.Socket) => {
-            socket.on('update', (data: {new_data: T, old_data: T}) => {
+    //<editor-fold defaultstate="collapsed" desc="private listenFromBackend ()">
+    private listenFromBackend(socket: SocketIOClient.Socket): Observable<string> {
+
+        console.log(socket)
+        return new Observable((o: Observer<string>) => {
+            
+            socket.on('disconnect', data => {
+                // Re join to room
+                socket.emit('join', JSON.stringify({db: this.db, table: this.table}));
+            })
+            
+            // Listen events fired to this.table
+            socket.on(this.table, (predata: string) => {
+
+                o.next(predata);
+                let data: {new_val: T, old_val: T} = JSON.parse(predata);
+                
+                // Current "state"
                 let db = this.db$.value;
-                
+
                 // New
-                if (!data.old_data && !!data.new_data) 
-                    this.db$.next([...db, data.new_data]);
-                
+                if (!data.old_val && !!data.new_val) 
+                    this.db$.next([...db, data.new_val]);
+
                 // Update
-                else if (!!data.old_data && !!data.new_data) {
+                else if (!!data.old_val && !!data.new_val) {
                     this.db$.next([
-                        ...db.filter(object => object.id !== data.old_data.id),
-                        data.new_data
+                        ...db.filter(object => object.id !== data.old_val.id),
+                        data.new_val
                         ]
                     );
                 }
+
                 // Delete
-                else if (!!data.old_data && !data.new_data) {
+                else if (!!data.old_val && !data.new_val) {
                     this.db$.next([
-                        ...db.filter(object => object.id !== data.old_data.id)
+                        ...db.filter(object => object.id !== data.old_val.id)
                     ])
                 }
-            })
-        })
+            });
+            return () => {
+                socket.disconnect();
+            }
+        });
+        
+        
     }
     //</editor-fold>
 }

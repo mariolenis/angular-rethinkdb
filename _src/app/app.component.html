@@ -1,3 +1,8 @@
 <h1>
   {{title}}
 </h1>
+
+<div *ngFor="let msg of counter | async">
+    {{msg.nombre}} > {{msg.msg}}
+</div>
+
