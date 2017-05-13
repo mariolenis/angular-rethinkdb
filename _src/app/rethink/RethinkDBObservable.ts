@@ -34,6 +34,13 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             );
     }
     
+    /**
+     * @description Emits join message to room related with changes on db.table
+     * @param new SocketIO
+     * @returns Observable<Socket>
+     * @throws Observable error if the request is unauthorized
+     */
+    //<editor-fold defaultstate="collapsed" desc="initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
     private initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {        
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
             // Connect de socket to the host and join to room according to db            
@@ -46,11 +53,20 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             });            
         });
     }
+    //</editor-fold>
     
+    /**
+     * @description function to query data from db; if filter$ is passed it will trigger a new query 
+     * canceling (if it is still on) the previus query.
+     * 
+     * @param optional <Observable<IRethinkDBFilter>>filter : observable of filters over time
+     * @returns Observable of T[]
+     */
+    //<editor-fold defaultstate="collapsed" desc="queryDBObject(filter$?: Observable<IRethinkDBFilter>): Observable<T[]>">
     private queryDBObject(filter$?: Observable<IRethinkDBFilter>): Observable<T[]> { 
         
         if (!!filter$) {
-            // Every new value of filter
+            // Every new value of filter will trigger a new query
             return filter$
                 .map(filter => Object.assign({db: this.db, table: this.table, api_key: this.config.api_key}, {filter: filter}))
                 .switchMap(queryBody => this.http$.post(this.API_URL + '/api/filter', queryBody))
@@ -61,6 +77,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                 .map(res => res.json());
         }
     }
+    //</editor-fold>
     
     push(newObject: T): Observable<IRethinkResponse> {
         // TODO: push data to db
@@ -84,9 +101,11 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @param complete?: () => void
      * @returns Subscription
      */
+    //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
         return this.db$.asObservable().subscribe(next, error, complete);
     }
+    //</editor-fold>
     
     /**
      * @description Function to listen events back from nodejs + socketio
