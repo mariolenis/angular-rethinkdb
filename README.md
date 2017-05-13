@@ -18,6 +18,7 @@ import {AngularRethinkDBModule} from 'angular-rethinkdb';
   imports: [
     ...,
     AngularRethinkDBModule.forRoot({
+        api_key: 'AAAA-BBBBB-CCCCC',
         database: 'your-db',
         host: 'http://<your-host>:<port>'
     })
