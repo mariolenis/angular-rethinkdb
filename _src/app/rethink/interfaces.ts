@@ -10,7 +10,7 @@ export interface IRethinkObject {
 }
 
 export interface IRethinkDBFilter {
-    
+    limit?: number    
 }
 
 export interface IRethinkResponse {
