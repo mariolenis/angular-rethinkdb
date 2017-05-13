@@ -10,7 +10,8 @@ export interface IRethinkObject {
 }
 
 export interface IRethinkDBFilter {
-    limit?: number    
+    limit?: number,
+    orderBy?: string    
 }
 
 export interface IRethinkResponse {
