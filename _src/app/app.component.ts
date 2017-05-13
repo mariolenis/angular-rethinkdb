@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 import {AngularRethinkDBService, AngularRethinkDBObservable} from './rethink/angular-rethinkdb';
 
 @Component({
