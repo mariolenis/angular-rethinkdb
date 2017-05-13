@@ -8,9 +8,9 @@ import {AngularRethinkDBService, AngularRethinkDBObservable} from './rethink/ang
 })
 export class AppComponent {
     title = 'Angular-RethinkDB works!';
-    counter: AngularRethinkDBObservable<{id: string, nombre: string, msg: string}[]>;
+    messages: AngularRethinkDBObservable<{id: string, nombre: string, msg: string}[]>;
     
     constructor(public ar: AngularRethinkDBService) {
-        this.counter = this.ar.list('counter');
+        this.messages = this.ar.list('counter');
     }
 }
