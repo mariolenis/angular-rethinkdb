@@ -141,11 +141,15 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
 
                 // Update data
                 else if (!!data.old_val && !!data.new_val) {
-                    this.db$.next([
-                        ...db.filter(object => object.id !== data.old_val.id),
-                        data.new_val
-                        ]
-                    );
+                    
+                    // Update if the new val is on db
+                    if (db.filter(object => object.id === data.new_val.id).length > 0) {
+                        this.db$.next([
+                            ...db.filter(object => object.id !== data.old_val.id),
+                            data.new_val
+                            ]
+                        );
+                    }
                 }
 
                 // Delete data
