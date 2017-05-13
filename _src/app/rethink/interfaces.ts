@@ -9,7 +9,7 @@ export interface IRethinkObject {
     id?: string
 }
 
-export interface IRethinkFilter {
+export interface IRethinkDBFilter {
     
 }
 
