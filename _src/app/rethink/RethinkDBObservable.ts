@@ -112,7 +112,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @param socket: SocketIOClient.Socket
      * @returns Observable
      */
-    //<editor-fold defaultstate="collapsed" desc="private listenFromBackend ()">
+    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket, filter$: Observable<IRethinkDBFilter>): Observable">
     private listenFromBackend(namespace: SocketIOClient.Socket, filter$: Observable<IRethinkDBFilter>): Observable<string> {
 
         return new Observable((o: Observer<string>) => {
@@ -160,7 +160,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                 namespace.disconnect();
             }
         });
-        
         
     }
     //</editor-fold>
