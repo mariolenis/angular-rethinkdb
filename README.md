@@ -59,7 +59,8 @@ export class Component {
         this.myTable.push(myNewData);
 
         // Delete data 
-        this.myTable.remove({ indexName:'id', indexValue: 'random-id' });
+        this.myTable.remove('random-id');
+        this.myTable.remove({ indexName:'custom-id', indexValue: 'id-value' });
 
         // Modify data
         let myUpdatedData = Object.assign(myNewData, {myProp: 'new value'});
