@@ -84,8 +84,14 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         return new Observable();
     }
     
-    remove(index: {indexName: string, indexValue: string}): Observable<IRethinkResponse> {
+    remove(index: {indexName: string, indexValue: string} | string): Observable<IRethinkResponse> {
         // TODO: remove data at db
+        if (typeof index === 'string') {
+            
+        } else {
+            
+        }
+        
         return new Observable();
     }
     
