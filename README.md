@@ -52,14 +52,14 @@ export class Component {
         
         // Initialize your object from table
         // this.ar.list(table : string, query$? : Observable<IRethinkDBQuery>)
-        this.myTable = this.ar.list('myTable', myQuery$.asObservable());
+        this.myTable = this.ar.list('myTable', this.myQuery$.asObservable());
 
         // Subscribe to your object and listen to data
         this.myTable.subscribe(data => console.log(data));
 
         // Query data will register a new filter and only will listen to changes 
         // according to the next value of query
-        myQuery$.next({
+        this.myQuery$.next({
             limit: 100,
             orderBy: 'lastUpdate',
             filter: {
