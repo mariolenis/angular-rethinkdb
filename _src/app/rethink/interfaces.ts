@@ -9,9 +9,10 @@ export interface IRethinkObject {
     id?: string
 }
 
-export interface IRethinkDBFilter {
+export interface IRethinkDBQuery {
     limit?: number,
-    orderBy?: string    
+    orderBy?: string,
+    filter?: Object
 }
 
 export interface IRethinkResponse {
