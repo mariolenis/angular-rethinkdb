@@ -45,7 +45,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         this.initSocketIO(socket)
         
             // Start the listener from backend
-            .map(socket => this.listenFromBackend(socket).subscribe())
+            .flatMap(socket => this.listenFromBackend(socket))
             
             // If query$ has next value, will trigger a new query without modifying the subscription filter in backend
             .flatMap(() => (!!this.query$ ? this.query$ : Observable.of(undefined)))

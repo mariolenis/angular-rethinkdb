@@ -20,7 +20,7 @@ export class AppComponent {
         
         this.ar.list('counter', this.query$.asObservable())
             .subscribe(res => console.log(res));
-        
+
     }
     
     initFilter(name: string) {
