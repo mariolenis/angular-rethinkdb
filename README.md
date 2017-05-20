@@ -46,6 +46,10 @@ interface IMyObjectType {
 export class Component {
     ...
     myTable: AngularRethinkDBObservable<IMyObjectType[]>;
+
+    // myQuery$ can be a Subject or a BehaviorSubject, it is not recomended to use ReplySubject
+    // When to use BehaviorSubject: When you need to initialize your AngularRethinkDBService along with the query
+    // When to use Subject: When the AngularRethinkDBService's query will be set by user or by another side effect
     myQuery$ = new BehaviorSubject<IRethinkDBQuery>(undefined);
 
     constructor(private ar: AngularRethinkDBService) {
