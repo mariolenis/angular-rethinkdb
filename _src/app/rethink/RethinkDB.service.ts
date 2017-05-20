@@ -23,7 +23,7 @@ export class AngularRethinkDBService {
      * @param <Observable<IRethinkDBQuery>> query to be applied to db.table events, 
      * also will trigger a new query for every next value in query
      * 
-     * @returns AngularRethinkDBObservable<any[]>
+     * @returns <AngularRethinkDBObservable<any[]>>
      */
     list(table: string, query$?: Observable<IRethinkDBQuery>): AngularRethinkDBObservable<any[]> {        
         return new AngularRethinkDBObservable<any[]>(this.config, this.http$, table, query$);
