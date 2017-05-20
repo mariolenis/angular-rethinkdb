@@ -161,12 +161,14 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     /**
      * @description Function to listen events back from nodejs + socketio
      * @param <SocketIOClient.Socket> socketSpace
-     * @returns <Observable<string>>
+     * @returns <Observable<SocketIOClient.Socket>>
      */
-    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket): Observable<string>">
-    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<string> {
+    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
+    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {
 
-        return new Observable((o: Observer<string>) => {
+        return new Observable((o: Observer<SocketIOClient.Socket>) => {
+            
+            o.next(socketSpace);
             
             socketSpace.on('disconnect', (disconnMsg: string) => {
                 // Re join to room
@@ -182,7 +184,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             // Listen events fired to this.table
             socketSpace.on(this.table, (predata: string) => {
 
-                o.next(predata);
                 let data: {new_val: T, old_val: T} = JSON.parse(predata);
                 
                 // Current "state"
