@@ -120,7 +120,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     }
     //</editor-fold>
     
-    //<editor-fold defaultstate="collapsed" desc="remove(string | index: {indexName: string, indexValue: string}): Observable<IRethinkResponse>">
+    //<editor-fold defaultstate="collapsed" desc="remove(index: string | {indexName: string, indexValue: string}): Observable<IRethinkResponse>">
     remove(index: string | {indexName: string, indexValue: string}): Observable<IRethinkResponse> {
         // TODO: remove data at db
         if (typeof index === 'string') {
