@@ -30,7 +30,12 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @param <Observable<IRethinkDBQuery>> query$
      */
     //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, private query$?: Observable<IRethinkDBQuery>)">
-    constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, private query$?: Observable<IRethinkDBQuery>) {
+    constructor(
+        private config: IRethinkDBAPIConfig, 
+        private http$: Http, 
+        private table: string, 
+        private query$?: Observable<IRethinkDBQuery>
+    ) {
         
         this.db      = this.config.database;
         this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');
