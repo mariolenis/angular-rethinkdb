@@ -1,6 +1,6 @@
 import {Component} from '@angular/core';
 import {AngularRethinkDBService, AngularRethinkDBObservable, IRethinkDBQuery} from './rethink/angular-rethinkdb';
-import {Subject} from 'rxjs/Subject';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 
 @Component({
   selector: 'app-root',
@@ -11,7 +11,7 @@ export class AppComponent {
     title = 'Angular-RethinkDB works!';
     messages: AngularRethinkDBObservable<{id: string, nombre: string, msg: string, fecha: Date}[]>;
     
-    query$ = new Subject<IRethinkDBQuery>();
+    query$ = new BehaviorSubject<IRethinkDBQuery>(undefined);
     
     constructor(public ar: AngularRethinkDBService) {
         this.messages = this.ar.list('counter');
@@ -19,7 +19,7 @@ export class AppComponent {
         this.ar.list('counter', this.query$.asObservable())
             .subscribe(res => console.log(res));
         
-        setTimeout(() => this.initFilter('Mario'), 250);
+        this.initFilter('Mario');
     }
     
     initFilter(name: string) {

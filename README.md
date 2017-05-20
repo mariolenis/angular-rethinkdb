@@ -34,7 +34,7 @@ export class AppModule { }
 ```js
 ...
 import {AngularRethinkDBService, AngularRethinkDBObservable, IRethinkDBQuery} from 'angular-rethinkdb';
-import {Subject} from 'rxjs/Subject';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 
 interface IMyObjectType {
     ...
@@ -46,16 +46,13 @@ interface IMyObjectType {
 export class Component {
     ...
     myTable: AngularRethinkDBObservable<IMyObjectType[]>;
-    myQuery$ = new Subject<IRethinkDBQuery>();
+    myQuery$ = new BehaviorSubject<IRethinkDBQuery>(undefined);
 
     constructor(private ar: AngularRethinkDBService) {
         
         // Initialize your object from table
         // this.ar.list(table : string, query$? : Observable<IRethinkDBQuery>)
         this.myTable = this.ar.list('myTable', this.myQuery$.asObservable());
-
-        // Subscribe to your object and listen to data
-        this.myTable.subscribe(data => console.log(data));
 
         // Query data will register a new filter and only will listen to changes 
         // according to the next value of query
@@ -66,6 +63,9 @@ export class Component {
                 name: 'some name'
             }
         });
+
+        // Subscribe to your object and listen to data
+        this.myTable.subscribe(data => console.log(data));
 
         // Push data
         let myNewData: IMyObjectType = {...};
