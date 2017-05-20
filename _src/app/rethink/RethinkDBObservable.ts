@@ -5,10 +5,12 @@ import {Observable} from 'rxjs/Observable';
 import {Observer} from 'rxjs/Observer';
 import * as io from 'socket.io-client';
 
-import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBFilter, IRethinkResponse} from './interfaces'
+import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse} from './interfaces'
 
+import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
+import 'rxjs/add/operator/concat';
 import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/mergeMap';
 
@@ -16,23 +18,46 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
     private db: string;
     private db$ = new BehaviorSubject<T[]>([]);
+    private lastQuery: IRethinkDBQuery; // For reconnection purposes ... // TODO: refactor this.
     
     private API_URL: string;
     
-    constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, filter$?: Observable<IRethinkDBFilter>) {
+    /**
+     * @constructor initialize object to listen to changes on db and query if there is a new value en query$
+     * @param <IRethinkDBAPIConfig> config
+     * @param <Http> http
+     * @param <string> table to listen
+     * @param <Observable<IRethinkDBQuery>> query$
+     */
+    //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, private query$?: Observable<IRethinkDBQuery>)">
+    constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, private query$?: Observable<IRethinkDBQuery>) {
         
         this.db      = this.config.database;
         this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');
         
         // Creates a namespace to listen events and populate db$ with new data triggered by filter observable
-        this.initSocketIO(io(this.API_URL))
-            .map(socket => this.listenFromBackend(socket, filter$).subscribe())
-            .flatMap(() => this.queryDBObject(filter$))
+        let socket = io(this.API_URL);
+        this.initSocketIO(socket)
+        
+            // Start the listener from backend
+            .map(socket => this.listenFromBackend(socket).subscribe())
+            
+            // If query$ has next value, will trigger a new query without modifying the subscription filter in backend
+            .flatMap(() => (!!this.query$ ? this.query$ : Observable.of(undefined)))
+            
+            // Register the change's listener
+            .switchMap(query => this.registerListener(socket, query))
+            
+            // Exectutes the query 
+            .switchMap(query => this.queryDBObject(query))
+            
+            // Append the result to the next BehaviorSubject Observer
             .subscribe(
                 data => this.db$.next(data),
                 err  => console.error(err)
             );
     }
+    //</editor-fold>
     
     /**
      * @description Emits join message to room related with changes on db.table
@@ -41,10 +66,12 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @throws Observable error if the request is unauthorized
      */
     //<editor-fold defaultstate="collapsed" desc="initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
-    private initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {        
+    private initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {
+        
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
-            // Connect de socket to the host and join to room according to db            
+            // Connect de socket to the host 
             socket.emit('join', JSON.stringify({ db: this.db, table: this.table, api_key: this.config.api_key }), (response: string) => {
+                
                 if (response.indexOf('err') > -1 )
                     o.error('Unauthorized api_key to ' + this.db);
                 else
@@ -56,34 +83,44 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     //</editor-fold>
     
     /**
-     * @description function to query data from db; if filter$ is passed it will trigger a new query 
-     * canceling (if it is still on) the previus query.
-     * 
-     * @param optional <Observable<IRethinkDBFilter>>filter : observable of filters over time
-     * @returns Observable of T[]
+     * @description Register the changes' listener on backend
+     * @param <Socket> 
+     * @param <IRethinkDBQuery> Optional query
+     * @returns <Observable<IRethinkDBQuery>>
      */
-    //<editor-fold defaultstate="collapsed" desc="queryDBObject(filter$?: Observable<IRethinkDBFilter>): Observable<T[]>">
-    private queryDBObject(filter$?: Observable<IRethinkDBFilter>): Observable<T[]> { 
-        
-        if (!!filter$) {
-            // Every new value of filter will trigger a new query
-            return filter$
-                .map(filter => Object.assign({db: this.db, table: this.table, api_key: this.config.api_key}, {filter: filter}))
-                .switchMap(queryBody => this.http$.post(this.API_URL + '/api/filter', queryBody))
-                .map(res => res.json());
-        } 
-        else {
-            return this.http$.post(this.API_URL + '/api/list', {db: this.db, table: this.table, api_key: this.config.api_key })
-                .map(res => res.json());
-        }
+    //<editor-fold defaultstate="collapsed" desc="registerListener(socket: SocketIOClient.Socket, query?: IRethinkDBQuery): Observable<IRethinkDBQuery">
+    private registerListener(socket: SocketIOClient.Socket, query?: IRethinkDBQuery): Observable<IRethinkDBQuery> {
+        if (!!query)
+            this.lastQuery = query;
+        return new Observable((o: Observer<IRethinkDBQuery>) => {
+            socket.emit('listenChanges', JSON.stringify({db: this.db, table: this.table, query: this.lastQuery}));
+            o.next(query);
+            o.complete();
+        })
     }
     //</editor-fold>
     
+    /**
+     * @description function to query data from db
+     * 
+     * @param optional <IRethinkDBFilter> query
+     * @returns Observable of T[]
+     */
+    //<editor-fold defaultstate="collapsed" desc="queryDBObject(query: IRethinkDBFilter): Observable<T[]>">
+    private queryDBObject(query : IRethinkDBQuery): Observable<T[]> {         
+        return this.http$.post(this.API_URL + '/api/list', { db: this.db, table: this.table, api_key: this.config.api_key, query: query })
+            .map(res => res.json());
+    }
+    //</editor-fold>
+    
+    //<editor-fold defaultstate="collapsed" desc="push(newObject: T): Observable<IRethinkResponse>">
     push(newObject: T): Observable<IRethinkResponse> {
         // TODO: push data to db
         return new Observable();
     }
+    //</editor-fold>
     
+    //<editor-fold defaultstate="collapsed" desc="remove(index: {indexName: string, indexValue: string} | string): Observable<IRethinkResponse>">
     remove(index: {indexName: string, indexValue: string} | string): Observable<IRethinkResponse> {
         // TODO: remove data at db
         if (typeof index === 'string') {
@@ -94,11 +131,14 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         
         return new Observable();
     }
+    //</editor-fold>
     
+    //<editor-fold defaultstate="collapsed" desc="update(object: T): Observable<IRethinkResponse>">
     update(object: T): Observable<IRethinkResponse> {
         // TODO: update data at db        
         return new Observable();
     }
+    //</editor-fold>
     
     /**
      * @description Subscribe to BehaviorSubject passing the observer to subscription
@@ -115,25 +155,27 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
     /**
      * @description Function to listen events back from nodejs + socketio
-     * @param socket: SocketIOClient.Socket
-     * @returns Observable
+     * @param <SocketIOClient.Socket> socketSpace
+     * @returns <Observable<string>>
      */
-    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket, filter$: Observable<IRethinkDBFilter>): Observable">
-    private listenFromBackend(namespace: SocketIOClient.Socket, filter$: Observable<IRethinkDBFilter>): Observable<string> {
+    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket): Observable<string>">
+    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<string> {
 
         return new Observable((o: Observer<string>) => {
             
-            namespace.on('disconnect', (disconnMsg: string) => {
+            socketSpace.on('disconnect', (disconnMsg: string) => {
                 // Re join to room
-                this.initSocketIO(namespace).subscribe();
+                this.initSocketIO(socketSpace)
+                    .flatMap(socket => this.registerListener(socket))
+                    .subscribe();
             });
             
-            namespace.on('err', (errorMessage: string) => {
+            socketSpace.on('err', (errorMessage: string) => {
                 this.db$.error(errorMessage);
             });
             
             // Listen events fired to this.table
-            namespace.on(this.table, (predata: string) => {
+            socketSpace.on(this.table, (predata: string) => {
 
                 o.next(predata);
                 let data: {new_val: T, old_val: T} = JSON.parse(predata);
@@ -163,7 +205,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             });
             
             return () => {
-                namespace.disconnect();
+                socketSpace.disconnect();
             }
         });
         
