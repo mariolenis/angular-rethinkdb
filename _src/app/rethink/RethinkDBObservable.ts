@@ -53,7 +53,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             // Register the change's listener
             .switchMap(query => this.registerListener(socket, query))
             
-            // Exectutes the query 
+            // Executes the query 
             .switchMap(query => this.queryDBObject(query))
             
             // Append the result to the next BehaviorSubject Observer
