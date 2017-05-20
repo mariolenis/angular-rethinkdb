@@ -12,13 +12,12 @@ export class AppComponent {
     messages: AngularRethinkDBObservable<{id: string, nombre: string, msg: string, fecha: Date}[]>;
     
     query$ = new Subject<IRethinkDBQuery>();
-    filteredMessages: AngularRethinkDBObservable<{id: string, nombre: string, msg: string}[]>;
     
     constructor(public ar: AngularRethinkDBService) {
         this.messages = this.ar.list('counter');
-        this.filteredMessages = this.ar.list('counter', this.query$.asObservable());
         
-        this.filteredMessages.subscribe(res => console.log(res));
+        this.ar.list('counter', this.query$.asObservable())
+            .subscribe(res => console.log(res));
         
         setTimeout(() => this.initFilter('Mario'), 250);
     }
