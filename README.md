@@ -20,7 +20,7 @@ import {AngularRethinkDBModule} from 'angular-rethinkdb';
     AngularRethinkDBModule.forRoot({
         api_key: 'AAAA-BBBBB-CCCCC',
         database: 'your-db',
-        host: '<http | https>://<your-host>:<port>'
+        host: '<http | https>://<your-host><:port>'
     })
   ],
   providers: [...],
@@ -33,7 +33,8 @@ export class AppModule { }
 ### Component Then
 ```js
 ...
-import {AngularRethinkDBService, AngularRethinkDBObservable} from 'angular-rethinkdb';
+import {AngularRethinkDBService, AngularRethinkDBObservable, IRethinkDBQuery} from 'angular-rethinkdb';
+import {Subject} from 'rxjs/Subject';
 
 interface IMyObjectType {
     ...
@@ -45,14 +46,26 @@ interface IMyObjectType {
 export class Component {
     ...
     myTable: AngularRethinkDBObservable<IMyObjectType[]>;
+    myQuery$ = new Subject<IRethinkDBQuery>();
 
     constructor(private ar: AngularRethinkDBService) {
         
         // Initialize your object from table
-        this.myTable = this.ar.list('myTable');
+        // this.ar.list(table : string, query$? : Observable<IRethinkDBQuery>)
+        this.myTable = this.ar.list('myTable', myQuery$.asObservable());
 
         // Subscribe to your object and listen to data
         this.myTable.subscribe(data => console.log(data));
+
+        // Query data will register a new filter and only will listen to changes 
+        // according to the next value of query
+        myQuery$.next({
+            limit: 100,
+            orderBy: 'lastUpdate',
+            filter: {
+                name: 'some name'
+            }
+        });
 
         // Push data
         let myNewData: IMyObjectType = {...};
@@ -78,6 +91,7 @@ export class Component {
 ```
 * Any change on ```'myTable'``` will be published on subscribe method.
 * __push__, __remove__, __update__ methods returns Observables to track the operation result
+* __IRethinkDBQuery__ All properties are optional. Valid properties are limit: number, orderBy: string and filter : Object; 
 
 ## TODO
 * [ SECURITY ] Authentication.
