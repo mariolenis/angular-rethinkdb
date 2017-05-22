@@ -9,10 +9,12 @@
             Said: <i>{{msg.msg}}</i>
         </div>
     </div>
-    <div class="input-group" style="padding-top: 15px">
-      <input type="text" name="msg" #msg class="form-control" placeholder="Text of message..." >
-      <span class="input-group-btn">
-        <button class="btn btn-default" (click)="sendMessage(msg.value); msg.value = ''" type="button">Send</button>
-      </span>
-    </div>
+    <form (ngSubmit) = "sendMessage(msg.value); msg.value = ''">
+        <div class="input-group" style="padding-top: 15px">
+            <input type="text" name="msg" #msg class="form-control" placeholder="Text of message..." required>
+          <span class="input-group-btn">
+              <button class="btn btn-default" type="submit">Send</button>
+          </span>
+        </div>
+    </form>
 </div>
