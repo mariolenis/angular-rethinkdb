@@ -90,6 +90,18 @@ export class Component {
                 response => console.log(response),
                 error => console.warn(error) // This is triggered if myUpdatedData has no id as property.
             );
+        
+        // Or you can update by query filter using IRethinkDBQuery interface
+        this.myTable.update(myUpdatedData, {
+                filter: {
+                    name: 'author'
+                },
+                limit: 10
+            })
+            .subscribe(
+                response => console.log(response),
+                error => console.warn(error) // This is triggered if myUpdatedData has no id as property.
+            );
     }
 }
 ```
