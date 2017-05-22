@@ -45,7 +45,7 @@ interface IMyObjectType {
 })
 export class Component {
     ...
-    myTable: AngularRethinkDBObservable<IMyObjectType[]>;
+    myTable: AngularRethinkDBObservable<IMyObjectType>;
 
     // myQuery$ can be a Subject or a BehaviorSubject, it is not recomended to use ReplySubject
     // When to use BehaviorSubject: When you need to initialize your AngularRethinkDBService along with the query
@@ -69,17 +69,21 @@ export class Component {
         });
 
         // Subscribe to your object and listen to data
-        this.myTable.subscribe(data => console.log(data));
+        this.myTable
+            .subscribe(data => console.log(data));
 
         // Push data
         let myNewData: IMyObjectType = {...};
-        this.myTable.push(myNewData);
+        this.myTable.push(myNewData)
+            .subscribe(res => console.log(res));
 
         // Delete data by id
-        this.myTable.remove('random-id');
+        this.myTable.remove('random-id')
+            .subscribe(res => console.log(res));
 
         // Delete data by custom index
-        this.myTable.remove({ indexName:'custom-id', indexValue: 'id-value' });
+        this.myTable.remove({ indexName:'custom-id', indexValue: 'id-value' })
+            .subscribe(res => console.log(res));
 
         // Modify data
         let myUpdatedData = Object.assign(myNewData, {myProp: 'new value'});

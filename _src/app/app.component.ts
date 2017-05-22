@@ -9,7 +9,7 @@ import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 })
 export class AppComponent {
     title = 'Angular-RethinkDB works!';
-    messages: AngularRethinkDBObservable<{id: string, nombre: string, msg: string, fecha: Date}[]>;
+    messages: AngularRethinkDBObservable<{id?: string, name: string, msg: string, date: Date}[]>;
     
     query$ = new BehaviorSubject<IRethinkDBQuery>(undefined);
     
@@ -20,7 +20,6 @@ export class AppComponent {
         
         this.ar.list('counter', this.query$.asObservable())
             .subscribe(res => console.log(res));
-
     }
     
     initFilter(name: string) {
@@ -29,5 +28,13 @@ export class AppComponent {
                 nombre: name
             }
         });
+    }
+    
+    sendMessage(msg: string): void {
+        this.messages.push({
+            name: 'visitor',
+            msg: msg,
+            date: new Date()
+        }).subscribe(res => console.log(res))      
     }
 }
