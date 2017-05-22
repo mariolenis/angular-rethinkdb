@@ -54,7 +54,7 @@ export class Component {
 
     constructor(private ar: AngularRethinkDBService) {
         
-        // Initialize your object from table
+        // Initialize your object from table, if does not exists, it will be created
         // this.ar.list(table : string, query$? : Observable<IRethinkDBQuery>)
         this.myTable = this.ar.list('myTable', this.myQuery$.asObservable());
 
