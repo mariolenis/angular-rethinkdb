@@ -125,7 +125,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @returns <Observable<IRethinkResponse>>
      */
     //<editor-fold defaultstate="collapsed" desc="push(newObject: T): Observable<IRethinkResponse>">
-    push(newObject: T): Observable<IRethinkResponse> {
+    push<T>(newObject: T): Observable<IRethinkResponse> {
         return this.http$.post(this.API_URL + '/api/put', {db: this.db, table: this.table, api_key: this.config.api_key, object: newObject})
             .map(res => res.json());
     }
@@ -154,11 +154,11 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @description function to update an object
      * 
      * @param <T> object
-     * @param <Object> optional filter
+     * @param <Object> optional filter 
      * @returns <Observable<IRethinkResponse>>
      */
     //<editor-fold defaultstate="collapsed" desc="update(object: T): Observable<IRethinkResponse>">
-    update(object: T, query?: IRethinkDBQuery): Observable<IRethinkResponse> {
+    update<T>(object: T, query?: IRethinkDBQuery): Observable<IRethinkResponse> {
         return this.http$.post(this.API_URL + '/api/update', {db: this.db, table: this.table, api_key: this.config.api_key, object: object, query: query})
             .map(res => res.json());
     }
