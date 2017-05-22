@@ -118,30 +118,49 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     }
     //</editor-fold>
     
+    /**
+     * @description function to push new data
+     * 
+     * @param <T> newObject
+     * @returns <Observable<IRethinkResponse>>
+     */
     //<editor-fold defaultstate="collapsed" desc="push(newObject: T): Observable<IRethinkResponse>">
     push(newObject: T): Observable<IRethinkResponse> {
-        // TODO: push data to db
-        return new Observable();
+        return this.http$.post(this.API_URL + '/api/put', {db: this.db, table: this.table, api_key: this.config.api_key, object: newObject})
+            .map(res => res.json());
     }
     //</editor-fold>
     
+    /**
+     * @description function to remove data
+     * 
+     * @param <string | indexName: string, indexValue: strin> index
+     * @returns <Observable<IRethinkResponse>>
+     */
     //<editor-fold defaultstate="collapsed" desc="remove(index: string | {indexName: string, indexValue: string}): Observable<IRethinkResponse>">
     remove(index: string | {indexName: string, indexValue: string}): Observable<IRethinkResponse> {
-        // TODO: remove data at db
         if (typeof index === 'string') {
-            
+            return this.http$.post(this.API_URL + '/api/delete', {db: this.db, table: this.table, api_key: this.config.api_key, query: {index: 'id', value: index as string}})
+                .map(res => res.json());
         } else {
-            
+            let query = index as {indexName: string, indexValue: string};
+            return this.http$.post(this.API_URL + '/api/delete', {db: this.db, table: this.table, api_key: this.config.api_key, query: {index: query.indexName, value: index.indexValue}})
+                .map(res => res.json());
         }
-        
-        return new Observable();
     }
     //</editor-fold>
     
+    /**
+     * @description function to update an object
+     * 
+     * @param <T> object
+     * @param <Object> optional filter
+     * @returns <Observable<IRethinkResponse>>
+     */
     //<editor-fold defaultstate="collapsed" desc="update(object: T): Observable<IRethinkResponse>">
-    update(object: T): Observable<IRethinkResponse> {
-        // TODO: update data at db        
-        return new Observable();
+    update(object: T, query?: IRethinkDBQuery): Observable<IRethinkResponse> {
+        return this.http$.post(this.API_URL + '/api/update', {db: this.db, table: this.table, api_key: this.config.api_key, object: object, query: query})
+            .map(res => res.json());
     }
     //</editor-fold>
     
