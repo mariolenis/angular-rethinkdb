@@ -1,5 +1,4 @@
 import {Injectable} from '@angular/core';
-import {Http} from '@angular/http';
 import {AngularRethinkDBObservable} from './RethinkDBObservable';
 import {IRethinkDBQuery, IRethinkDBAPIConfig} from './interfaces';
 import {Observable} from 'rxjs/Observable';
@@ -14,7 +13,7 @@ export class RethinkDBAPIConfig implements IRethinkDBAPIConfig {
 @Injectable()
 export class AngularRethinkDBService {
     
-    constructor( private config: RethinkDBAPIConfig, private http$: Http ) {}
+    constructor( private config: RethinkDBAPIConfig ) {}
     
     /**
      * @description Function to initialize event listening on db.table. 
@@ -26,6 +25,6 @@ export class AngularRethinkDBService {
      * @returns <AngularRethinkDBObservable<any[]>>
      */
     list(table: string, query$?: Observable<IRethinkDBQuery>): AngularRethinkDBObservable<any[]> {        
-        return new AngularRethinkDBObservable<any[]>(this.config, this.http$, table, query$);
+        return new AngularRethinkDBObservable<any[]>(this.config, table, query$);
     }
 }

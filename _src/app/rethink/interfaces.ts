@@ -1,3 +1,5 @@
+import {Observable} from 'rxjs/Observable';
+
 export interface IRethinkDBAPIConfig {
     api_key: string,
     database: string
@@ -24,4 +26,8 @@ export interface IRethinkResponse {
     skipped: number;
     first_error: Error;
     generated_keys: string[]; // only for insert
+}
+
+export interface IResponse<T> {
+    json: () => Promise<T>
 }

@@ -1,13 +1,13 @@
-import {Http, Response} from '@angular/http';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 import {Subscription} from 'rxjs/Subscription';
 import {Observable} from 'rxjs/Observable';
 import {Observer} from 'rxjs/Observer';
 import * as io from 'socket.io-client';
 
-import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse} from './interfaces'
+import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces'
 
 import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/concat';
@@ -32,7 +32,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, private query$?: Observable<IRethinkDBQuery>)">
     constructor(
         private config: IRethinkDBAPIConfig, 
-        private http$: Http, 
         private table: string, 
         private query$?: Observable<IRethinkDBQuery>
     ) {
@@ -112,9 +111,18 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @returns Observable of T[]
      */
     //<editor-fold defaultstate="collapsed" desc="queryDBObject(query: IRethinkDBFilter): Observable<T[]>">
-    private queryDBObject(query : IRethinkDBQuery): Observable<T[]> {         
-        return this.http$.post(this.API_URL + '/api/list', { db: this.db, table: this.table, api_key: this.config.api_key, query: query })
-            .map(res => res.json());
+    private queryDBObject(query : IRethinkDBQuery): Observable<T[]> {
+        return Observable.fromPromise<IResponse<T>>(
+            fetch(this.API_URL + '/api/list', {
+                method: 'POST',
+                body: JSON.stringify({ db: this.db, table: this.table, api_key: this.config.api_key, query: query }),
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                }            
+            })
+        )
+        .switchMap(res => Observable.fromPromise<Object>(res.json()));
     }
     //</editor-fold>
     
@@ -126,8 +134,17 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="push(newObject: T): Observable<IRethinkResponse>">
     push<T>(newObject: T): Observable<IRethinkResponse> {
-        return this.http$.post(this.API_URL + '/api/put', {db: this.db, table: this.table, api_key: this.config.api_key, object: newObject})
-            .map(res => res.json());
+        return Observable.fromPromise<IResponse<T>>(
+            fetch(this.API_URL + '/api/put', {
+                method: 'POST',
+                body: JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, object: newObject}),
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                }            
+            })
+        )
+        .switchMap(res => Observable.fromPromise<Object>(res.json()));
     }
     //</editor-fold>
     
@@ -139,14 +156,26 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="remove(index: string | {indexName: string, indexValue: string}): Observable<IRethinkResponse>">
     remove(index: string | {indexName: string, indexValue: string}): Observable<IRethinkResponse> {
-        if (typeof index === 'string') {
-            return this.http$.post(this.API_URL + '/api/delete', {db: this.db, table: this.table, api_key: this.config.api_key, query: {index: 'id', value: index as string}})
-                .map(res => res.json());
-        } else {
+        
+        let body: string = '';
+        if (typeof index === 'string') 
+            body = JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, query: {index: 'id', value: index as string}});
+        else {
             let query = index as {indexName: string, indexValue: string};
-            return this.http$.post(this.API_URL + '/api/delete', {db: this.db, table: this.table, api_key: this.config.api_key, query: {index: query.indexName, value: index.indexValue}})
-                .map(res => res.json());
+            body = JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, query: {index: query.indexName, value: index.indexValue}});
         }
+        
+        return Observable.fromPromise<IResponse<T>>(
+            fetch(this.API_URL + '/api/delete', {
+                method: 'POST',
+                body: body,
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                }            
+            })
+        )
+        .switchMap(res => Observable.fromPromise<Object>(res.json()));
     }
     //</editor-fold>
     
@@ -158,9 +187,18 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @returns <Observable<IRethinkResponse>>
      */
     //<editor-fold defaultstate="collapsed" desc="update(object: T): Observable<IRethinkResponse>">
-    update<T>(object: T, query?: IRethinkDBQuery): Observable<IRethinkResponse> {
-        return this.http$.post(this.API_URL + '/api/update', {db: this.db, table: this.table, api_key: this.config.api_key, object: object, query: query})
-            .map(res => res.json());
+    update<T>(updatedObj: T, query?: IRethinkDBQuery): Observable<IRethinkResponse> {
+        return Observable.fromPromise<IResponse<T>>(
+            fetch(this.API_URL + '/api/update', {
+                method: 'POST',
+                body: JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, object: updatedObj, query: query}),
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json'
+                }            
+            })
+        )
+        .switchMap(res => Observable.fromPromise<Object>(res.json()));
     }
     //</editor-fold>
     
@@ -173,7 +211,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
-        return this.db$.asObservable().subscribe(next, error, complete);
+        return this.db$.subscribe(next, error, complete);
     }
     //</editor-fold>
     
