@@ -16,7 +16,6 @@ import 'rxjs/add/operator/mergeMap';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
-    private db: string;
     private db$ = new BehaviorSubject<T[]>([]);
     private lastQuery: IRethinkDBQuery; // For reconnection purposes ... // TODO: refactor this.
     
@@ -25,18 +24,16 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     /**
      * @constructor initialize object to listen to changes on db and query if there is a new value en query$
      * @param <IRethinkDBAPIConfig> config
-     * @param <Http> http
      * @param <string> table to listen
      * @param <Observable<IRethinkDBQuery>> query$
      */
-    //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private http$: Http, private table: string, private query$?: Observable<IRethinkDBQuery>)">
+    //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private table: string, private query$?: Observable<IRethinkDBQuery>)">
     constructor(
         private config: IRethinkDBAPIConfig, 
         private table: string, 
         private query$?: Observable<IRethinkDBQuery>
     ) {
         
-        this.db      = this.config.database;
         this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');
         
         // Creates a namespace to listen events and populate db$ with new data triggered by filter observable
@@ -74,10 +71,10 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
             // Connect de socket to the host 
-            socket.emit('join', JSON.stringify({ db: this.db, table: this.table, api_key: this.config.api_key }), (response: string) => {
+            socket.emit('join', JSON.stringify({ db: this.config.database, table: this.table, api_key: this.config.api_key }), (response: string) => {
                 
                 if (response.indexOf('err') > -1 )
-                    o.error('Unauthorized api_key to ' + this.db);
+                    o.error('Unauthorized api_key to ' + this.config.database);
                 else
                     o.next(socket);
                 o.complete();
@@ -97,7 +94,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         if (!!query)
             this.lastQuery = query;
         return new Observable((o: Observer<IRethinkDBQuery>) => {
-            socket.emit('listenChanges', JSON.stringify({db: this.db, table: this.table, query: this.lastQuery}));
+            socket.emit('listenChanges', JSON.stringify({db: this.config.database, table: this.table, query: this.lastQuery}));
             o.next(query);
             o.complete();
         })
@@ -115,7 +112,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         return Observable.fromPromise<IResponse<T>>(
             fetch(this.API_URL + '/api/list', {
                 method: 'POST',
-                body: JSON.stringify({ db: this.db, table: this.table, api_key: this.config.api_key, query: query }),
+                body: JSON.stringify({ db: this.config.database, table: this.table, api_key: this.config.api_key, query: query }),
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'
@@ -137,7 +134,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         return Observable.fromPromise<IResponse<T>>(
             fetch(this.API_URL + '/api/put', {
                 method: 'POST',
-                body: JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, object: newObject}),
+                body: JSON.stringify({db: this.config.database, table: this.table, api_key: this.config.api_key, object: newObject}),
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'
@@ -159,10 +156,10 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         
         let body: string = '';
         if (typeof index === 'string') 
-            body = JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, query: {index: 'id', value: index as string}});
+            body = JSON.stringify({db: this.config.database, table: this.table, api_key: this.config.api_key, query: {index: 'id', value: index as string}});
         else {
             let query = index as {indexName: string, indexValue: string};
-            body = JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, query: {index: query.indexName, value: index.indexValue}});
+            body = JSON.stringify({db: this.config.database, table: this.table, api_key: this.config.api_key, query: {index: query.indexName, value: index.indexValue}});
         }
         
         return Observable.fromPromise<IResponse<T>>(
@@ -191,7 +188,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         return Observable.fromPromise<IResponse<T>>(
             fetch(this.API_URL + '/api/update', {
                 method: 'POST',
-                body: JSON.stringify({db: this.db, table: this.table, api_key: this.config.api_key, object: updatedObj, query: query}),
+                body: JSON.stringify({ db: this.config.database, table: this.table, api_key: this.config.api_key, object: updatedObj, query: query }),
                 headers: {
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'
