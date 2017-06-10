@@ -16,7 +16,12 @@ import 'rxjs/add/operator/mergeMap';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
+    // Variable that represents the "state" result of the query, 
+    // it is needed in order to not update not the whole query document but 
+    // the parts that had changed
     private db$ = new BehaviorSubject<T[]>([]);
+    
+    // api_url
     private API_URL: string;
     
     /**
