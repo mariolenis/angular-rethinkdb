@@ -1,6 +1,7 @@
 import {Component} from '@angular/core';
 import {AngularRethinkDBService, AngularRethinkDBObservable, IRethinkDBQuery} from './rethink/angular-rethinkdb';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+import {Subject} from 'rxjs/Subject';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +19,7 @@ export class AppComponent {
         
         this.initFilter('Mario');
         
-        this.ar.list('counter', this.query$.asObservable())
+        this.ar.list('counter', this.query$)
             .subscribe(res => console.log(res));
     }
     

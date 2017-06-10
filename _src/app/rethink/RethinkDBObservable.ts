@@ -30,11 +30,11 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @param <string> table to listen
      * @param <Observable<IRethinkDBQuery>> query$
      */
-    //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private table: string, private query$?: Observable<IRethinkDBQuery>)">
+    //<editor-fold defaultstate="collapsed" desc="constructor(private config: IRethinkDBAPIConfig, private table: string, private query$?: BehaviorSubject<IRethinkDBQuery>)">
     constructor(
         private config: IRethinkDBAPIConfig, 
         private table: string, 
-        private query$?: Observable<IRethinkDBQuery>
+        private query$?: BehaviorSubject<IRethinkDBQuery>
     ) {
         
         this.API_URL = (!!config.host ? config.host : '') + (!!config.port ? ':' + config.port : '');

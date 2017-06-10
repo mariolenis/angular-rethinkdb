@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {AngularRethinkDBObservable} from './RethinkDBObservable';
 import {IRethinkDBQuery, IRethinkDBAPIConfig} from './interfaces';
-import {Observable} from 'rxjs/Observable';
+import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 
 export class RethinkDBAPIConfig implements IRethinkDBAPIConfig {
     api_key: string
@@ -24,7 +24,7 @@ export class AngularRethinkDBService {
      * 
      * @returns <AngularRethinkDBObservable<any[]>>
      */
-    list(table: string, query$?: Observable<IRethinkDBQuery>): AngularRethinkDBObservable<any[]> {        
+    list(table: string, query$?: BehaviorSubject<IRethinkDBQuery>): AngularRethinkDBObservable<any[]> {        
         return new AngularRethinkDBObservable<any[]>(this.config, table, query$);
     }
 }
