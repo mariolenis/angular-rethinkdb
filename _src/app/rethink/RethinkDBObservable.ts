@@ -38,7 +38,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         let socket = io(this.API_URL);
         this.initSocketIO(socket)
         
-            // Start the listener from backend, also if gets disconnected and reconnected, emits message to refreash the query
+            // Start the listener from backend, also if gets disconnected and reconnected, emits message to refresh the query
             .flatMap(socket => this.listenFromBackend(socket))
             
             // If query$ has next value, will trigger a new query without modifying the subscription filter in backend
@@ -76,6 +76,64 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                     o.next(socket);
                 o.complete();
             });            
+        });
+    }
+    //</editor-fold>
+    
+    /**
+     * @description Function to listen events back from nodejs + socketio
+     * @param <SocketIOClient.Socket> socketSpace
+     * @returns <Observable<SocketIOClient.Socket>>
+     */
+    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
+    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<string> {
+
+        return new Observable((o: Observer<string>) => {
+            
+            socketSpace.on('reconnect', (connMsg:string) => {
+                // Emit a new message to re-query for changes
+                o.next(connMsg);
+            });
+            
+            socketSpace.on('error', (errorMessage: string) => {
+                this.db$.error(errorMessage);
+            });
+            
+            // Listen events fired to this.table
+            socketSpace.on(this.table, (predata: string) => {
+
+                let data: {new_val: T, old_val: T} = JSON.parse(predata);
+                
+                // Current "state"
+                let db = this.db$.value;
+
+                // New data
+                if (!data.old_val && !!data.new_val) 
+                    this.db$.next([...db, data.new_val]);
+
+                // Update data
+                else if (!!data.old_val && !!data.new_val && db.filter(object => object.id === data.new_val.id).length > 0) {
+                    this.db$.next([
+                        ...db.filter(object => object.id !== data.old_val.id),
+                        data.new_val
+                        ]
+                    );
+                }
+
+                // Delete data
+                else if (!!data.old_val && !data.new_val) {
+                    this.db$.next([
+                        ...db.filter(object => object.id !== data.old_val.id)
+                    ])
+                }
+            });
+            
+            // Emit message to start querying
+            o.next('start');
+            
+            return () => {
+                socketSpace.disconnect();
+            }
         });
     }
     //</editor-fold>
@@ -204,65 +262,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
         return this.db$.subscribe(next, error, complete);
-    }
-    //</editor-fold>
-    
-    /**
-     * @description Function to listen events back from nodejs + socketio
-     * @param <SocketIOClient.Socket> socketSpace
-     * @returns <Observable<SocketIOClient.Socket>>
-     */
-    //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
-    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<string> {
-
-        return new Observable((o: Observer<string>) => {
-            
-            socketSpace.on('reconnect', (connMsg:string) => {
-                // Emit a new message to re-query for changes
-                o.next(connMsg);
-            });
-            
-            socketSpace.on('error', (errorMessage: string) => {
-                this.db$.error(errorMessage);
-            });
-            
-            // Listen events fired to this.table
-            socketSpace.on(this.table, (predata: string) => {
-
-                let data: {new_val: T, old_val: T} = JSON.parse(predata);
-                
-                // Current "state"
-                let db = this.db$.value;
-
-                // New data
-                if (!data.old_val && !!data.new_val) 
-                    this.db$.next([...db, data.new_val]);
-
-                // Update data
-                else if (!!data.old_val && !!data.new_val && db.filter(object => object.id === data.new_val.id).length > 0) {
-                    this.db$.next([
-                        ...db.filter(object => object.id !== data.old_val.id),
-                        data.new_val
-                        ]
-                    );
-                }
-
-                // Delete data
-                else if (!!data.old_val && !data.new_val) {
-                    this.db$.next([
-                        ...db.filter(object => object.id !== data.old_val.id)
-                    ])
-                }
-            });
-            
-            // Emit message to start querying
-            o.next('start');
-            
-            return () => {
-                socketSpace.disconnect();
-            }
-        });
-        
     }
     //</editor-fold>
 }
