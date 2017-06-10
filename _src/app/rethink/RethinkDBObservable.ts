@@ -4,7 +4,7 @@ import {Observable} from 'rxjs/Observable';
 import {Observer} from 'rxjs/Observer';
 import * as io from 'socket.io-client';
 
-import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces'
+import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces';
 
 import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/fromPromise';
@@ -57,16 +57,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             );
     }
     //</editor-fold>
-    
-    /**
-     * @returns Current result value of qwuery
-     */
-    //<editor-fold defaultstate="collapsed" desc="getValue(): T[]">
-    getValue(): T[] {
-        return this.db$.value;
-    }
-    //</editor-fold>
-    
+        
     /**
      * @description Emits join message to room related with changes on db.table
      * @param new SocketIO
