@@ -17,8 +17,6 @@ import 'rxjs/add/operator/mergeMap';
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
     private db$ = new BehaviorSubject<T[]>([]);
-    private lastQuery: IRethinkDBQuery; // For reconnection purposes ... // TODO: refactor this.
-    
     private API_URL: string;
     
     /**
@@ -40,7 +38,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         let socket = io(this.API_URL);
         this.initSocketIO(socket)
         
-            // Start the listener from backend
+            // Start the listener from backend, also if gets disconnected and reconnected, emits message to refreash the query
             .flatMap(socket => this.listenFromBackend(socket))
             
             // If query$ has next value, will trigger a new query without modifying the subscription filter in backend
@@ -61,6 +59,15 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     //</editor-fold>
     
     /**
+     * @returns Current result value of qwuery
+     */
+    //<editor-fold defaultstate="collapsed" desc="getValue(): T[]">
+    getValue(): T[] {
+        return this.db$.value;
+    }
+    //</editor-fold>
+    
+    /**
      * @description Emits join message to room related with changes on db.table
      * @param new SocketIO
      * @returns Observable<Socket>
@@ -68,7 +75,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
     private initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {
-        
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
             // Connect de socket to the host 
             socket.emit('join', JSON.stringify({ db: this.config.database, table: this.table, api_key: this.config.api_key }), (response: string) => {
@@ -91,10 +97,8 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="registerListener(socket: SocketIOClient.Socket, query?: IRethinkDBQuery): Observable<IRethinkDBQuery">
     private registerListener(socket: SocketIOClient.Socket, query?: IRethinkDBQuery): Observable<IRethinkDBQuery> {
-        if (!!query)
-            this.lastQuery = query;
         return new Observable((o: Observer<IRethinkDBQuery>) => {
-            socket.emit('listenChanges', JSON.stringify({db: this.config.database, table: this.table, query: this.lastQuery}));
+            socket.emit('listenChanges', JSON.stringify({db: this.config.database, table: this.table, query: query}));
             o.next(query);
             o.complete();
         })
@@ -218,20 +222,16 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @returns <Observable<SocketIOClient.Socket>>
      */
     //<editor-fold defaultstate="collapsed" desc="listenFromBackend(namespace: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
-    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {
+    private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<string> {
 
-        return new Observable((o: Observer<SocketIOClient.Socket>) => {
+        return new Observable((o: Observer<string>) => {
             
-            o.next(socketSpace);
-            
-            socketSpace.on('disconnect', (disconnMsg: string) => {
-                // Re join to room
-                this.initSocketIO(socketSpace)
-                    .flatMap(socket => this.registerListener(socket))
-                    .subscribe();
+            socketSpace.on('reconnect', (connMsg:string) => {
+                // Emit a new message to re-query for changes
+                o.next(connMsg);
             });
             
-            socketSpace.on('err', (errorMessage: string) => {
+            socketSpace.on('error', (errorMessage: string) => {
                 this.db$.error(errorMessage);
             });
             
@@ -263,6 +263,9 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                     ])
                 }
             });
+            
+            // Emit message to start querying
+            o.next('start');
             
             return () => {
                 socketSpace.disconnect();
