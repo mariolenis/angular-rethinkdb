@@ -16,6 +16,9 @@ import 'rxjs/add/operator/mergeMap';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
+    // Global observable
+    private queryListener$: Observable<T[]>;
+    
     // Variable that represents the "state" result of the query, 
     // it is needed in order to not update not the whole query document but 
     // the parts that had changed
@@ -41,7 +44,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         
         // Creates a namespace to listen events and populate db$ with new data triggered by filter observable
         let socket = io(this.API_URL);
-        this.initSocketIO(socket)
+        this.queryListener$ = this.initSocketIO(socket)
         
             // Start the listener from backend, also if gets disconnected and reconnected, emits message to refresh the query
             .flatMap(socket => this.listenFromBackend(socket))
@@ -53,13 +56,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             .switchMap(query => this.registerListener(socket, query))
             
             // Executes the query 
-            .switchMap(query => this.queryDBObject(query))
-            
-            // Append the result to the next BehaviorSubject Observer
-            .subscribe(
-                data => this.db$.next(data),
-                err  => console.error(err)
-            );
+            .switchMap(query => this.queryDBObject(query));
     }
     //</editor-fold>
         
@@ -266,6 +263,12 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
+        this.queryListener$
+            // Append the result to the next BehaviorSubject Observer
+            .subscribe(
+                data => this.db$.next(data),
+                err  => console.error(err)
+            );
         return this.db$.subscribe(next, error, complete);
     }
     //</editor-fold>
