@@ -7,21 +7,24 @@ import * as io from 'socket.io-client';
 import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces';
 
 import 'rxjs/add/observable/of';
+import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/fromPromise';
+import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/concat';
-import 'rxjs/add/operator/switchMap';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/switchMap';
+import 'rxjs/add/operator/repeat';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
-    // Global observable
-    private queryListener$: Observable<T[]>;
+    // Observable of the initial query and connection
+    private queryObservable$: Observable<void>;
     
-    // Variable that represents the "state" result of the query, 
-    // it is needed in order to not update not the whole query document but 
-    // the parts that had changed
+    // Variable that represents the "state" result of the changes, 
+    // it is needed in order to not update not the whole list of objects but 
+    // the single object that had changed
     private db$ = new BehaviorSubject<T[]>([]);
     
     // api_url
@@ -44,9 +47,15 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         
         // Creates a namespace to listen events and populate db$ with new data triggered by filter observable
         let socket = io(this.API_URL);
-        this.queryListener$ = this.initSocketIO(socket)
+        this.queryObservable$ = Observable.of({ db: this.config.database, table: this.table, api_key: this.config.api_key })
         
-            // Start the listener from backend, also if gets disconnected and reconnected, emits message to refresh the query
+            // Join the current socket to the listener
+            .flatMap(config => this.initSocketIO(socket, config))
+            
+            // If gets disconnected and reconnected, emits error to retry initSocketIO()
+            .repeat()
+        
+            // Start the listener from backend.
             .flatMap(socket => this.listenFromBackend(socket))
             
             // If query$ has next value, will trigger a new query without modifying the subscription filter in backend
@@ -56,10 +65,13 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             .switchMap(query => this.registerListener(socket, query))
             
             // Executes the query 
-            .switchMap(query => this.queryDBObject(query));
+            .switchMap(query => this.queryDBObject(query))
+            
+            // Pass the result to the Behavior
+            .map(result => this.db$.next(result))
     }
     //</editor-fold>
-        
+    
     /**
      * @description Emits join message to room related with changes on db.table
      * @param new SocketIO
@@ -67,17 +79,25 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @throws Observable error if the request is unauthorized
      */
     //<editor-fold defaultstate="collapsed" desc="initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
-    private initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket> {
+    private initSocketIO(socket: SocketIOClient.Socket, config: Object): Observable<SocketIOClient.Socket> {
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
             // Connect de socket to the host 
-            socket.emit('join', JSON.stringify({ db: this.config.database, table: this.table, api_key: this.config.api_key }), (response: string) => {
-                
+            socket.emit('join', JSON.stringify(config), (response: string) => {
+                console.log('join', config)
                 if (response.indexOf('err') > -1 )
-                    o.error('Unauthorized api_key to ' + this.config.database);
+                    o.error('Unauthorized api key ' + (config as {api_key: string}).api_key);
                 else
                     o.next(socket);
+            });
+            
+            socket.on('reconnect', (connMsg:string) => {
+                // Terminates the Observable to trigger repeat operator
                 o.complete();
-            });            
+            });
+            
+            socket.on('error', (errorMessage: string) => {
+                o.complete();
+            });
         });
     }
     //</editor-fold>
@@ -91,15 +111,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     private listenFromBackend(socketSpace: SocketIOClient.Socket): Observable<string> {
 
         return new Observable((o: Observer<string>) => {
-            
-            socketSpace.on('reconnect', (connMsg:string) => {
-                // Emit a new message to re-query for changes
-                o.next(connMsg);
-            });
-            
-            socketSpace.on('error', (errorMessage: string) => {
-                this.db$.error(errorMessage);
-            });
             
             // Listen events fired to this.table
             socketSpace.on(this.table, (predata: string) => {
@@ -263,12 +274,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
-        this.queryListener$
-            // Append the result to the next BehaviorSubject Observer
-            .subscribe(
-                data => this.db$.next(data),
-                err  => console.error(err)
-            );
+        this.queryObservable$.subscribe();
         return this.db$.subscribe(next, error, complete);
     }
     //</editor-fold>
