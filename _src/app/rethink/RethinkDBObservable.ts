@@ -70,7 +70,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @returns Observable<Socket>
      * @throws Observable error if the request is unauthorized
      */
-    //<editor-fold defaultstate="collapsed" desc="validateConnectionCredentials(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
+    //<editor-fold defaultstate="collapsed" desc="validateConnectionCredentials(socket: SocketIOClient.Socket, config: Object): Observable<SocketIOClient.Socket>">
     private validateConnectionCredentials(socket: SocketIOClient.Socket, config: Object): Observable<SocketIOClient.Socket> {
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
             
