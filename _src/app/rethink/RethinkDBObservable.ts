@@ -66,7 +66,8 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
     /**
      * @description Emits join message to room related with changes on db.table
-     * @param new SocketIO
+     * @param <Socket> socket
+     * @param <Object> config
      * @returns Observable<Socket>
      * @throws Observable error if the request is unauthorized
      */
