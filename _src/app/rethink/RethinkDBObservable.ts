@@ -255,7 +255,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
-        this.queryObservable$.subscribe(this.db$.next, this.db$.error);
+        this.queryObservable$.subscribe(result => this.db$.next(result), err => this.db$.error(err));
         return this.db$.subscribe(next, error, complete);
     }
     //</editor-fold>
