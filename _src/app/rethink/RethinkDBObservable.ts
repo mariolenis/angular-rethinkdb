@@ -78,6 +78,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                     o.error('Unauthorized api key ' + (config as {api_key: string}).api_key);
                 else
                     o.next(socket);
+                o.complete();
             });
             
         });
