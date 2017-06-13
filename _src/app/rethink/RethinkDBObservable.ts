@@ -49,12 +49,9 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
         let socket = io(this.API_URL);
         this.queryObservable$ = Observable.of({ db: this.config.database, table: this.table, api_key: this.config.api_key })
         
-            // Join the current socket to the listener
-            .flatMap(config => this.initSocketIO(socket, config))
+            // Validate the connection
+            .flatMap(config => this.validateConnectionCredentials(socket, config))
             
-            // If gets disconnected and reconnected, emits error to retry initSocketIO()
-            .repeat()
-        
             // Start the listener from backend.
             .flatMap(socket => this.listenFromBackend(socket))
             
@@ -79,25 +76,17 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      * @throws Observable error if the request is unauthorized
      */
     //<editor-fold defaultstate="collapsed" desc="initSocketIO(socket: SocketIOClient.Socket): Observable<SocketIOClient.Socket>">
-    private initSocketIO(socket: SocketIOClient.Socket, config: Object): Observable<SocketIOClient.Socket> {
+    private validateConnectionCredentials(socket: SocketIOClient.Socket, config: Object): Observable<SocketIOClient.Socket> {
         return new Observable((o: Observer<SocketIOClient.Socket>) => {
-            // Connect de socket to the host 
-            socket.emit('join', JSON.stringify(config), (response: string) => {
-                console.log('join', config)
+            
+            // Connect de socket to the host to validate
+            socket.emit('validate', JSON.stringify(config), (response: string) => {
                 if (response.indexOf('err') > -1 )
                     o.error('Unauthorized api key ' + (config as {api_key: string}).api_key);
                 else
                     o.next(socket);
             });
             
-            socket.on('reconnect', (connMsg:string) => {
-                // Terminates the Observable to trigger repeat operator
-                o.complete();
-            });
-            
-            socket.on('error', (errorMessage: string) => {
-                o.complete();
-            });
         });
     }
     //</editor-fold>
@@ -114,7 +103,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             
             // Listen events fired to this.table
             socketSpace.on(this.table, (predata: string) => {
-
                 let data: {new_val: T, old_val: T} = JSON.parse(predata);
                 
                 // Current "state"
@@ -141,12 +129,12 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                 }
             });
             
+            socketSpace.on('reconnect', () => {
+                o.next('Reconnect');
+            });
+            
             // Emit message to start querying
             o.next('start');
-            
-            return () => {
-                socketSpace.disconnect();
-            }
         });
     }
     //</editor-fold>
