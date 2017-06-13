@@ -7,15 +7,10 @@ import * as io from 'socket.io-client';
 import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces';
 
 import 'rxjs/add/observable/of';
-import 'rxjs/add/observable/merge';
 import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/operator/concat';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/switchMap';
-import 'rxjs/add/operator/repeat';
 
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
