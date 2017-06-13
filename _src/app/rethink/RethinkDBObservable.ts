@@ -15,7 +15,7 @@ import 'rxjs/add/operator/switchMap';
 export class AngularRethinkDBObservable<T extends IRethinkObject> {
     
     // Observable of the initial query and connection
-    private queryObservable$: Observable<void>;
+    private queryObservable$: Observable<T[]>;
     
     // Variable that represents the "state" result of the changes, 
     // it is needed in order to not update not the whole list of objects but 
@@ -57,10 +57,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             .switchMap(query => this.registerListener(socket, query))
             
             // Executes the query 
-            .switchMap(query => this.queryDBObject(query))
-            
-            // Pass the result to the Behavior
-            .map(result => this.db$.next(result))
+            .switchMap(query => this.queryDBObject(query))            
     }
     //</editor-fold>
     
@@ -258,7 +255,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
      */
     //<editor-fold defaultstate="collapsed" desc="subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription">
     subscribe(next?: (value: T[]) => void, error?: (error: any) => void, complete?: () => void ): Subscription {
-        this.queryObservable$.subscribe();
+        this.queryObservable$.subscribe(this.db$.next, this.db$.error);
         return this.db$.subscribe(next, error, complete);
     }
     //</editor-fold>
