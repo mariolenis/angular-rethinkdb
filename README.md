@@ -5,7 +5,7 @@ __David East__ so, thanks to him.
 This is an work in progress so apologies for the lack of documentation.
 
 ## Usage
-Here is a simple demo
+Here is a simple demo https://zelcius.com/angular-rethinkdb/
 ### Module 1st
 In order to use this, you will need to build a backend seervice for RethinkDB, __or__ you might use this one 
 https://github.com/mariolenis/rethinkdb-daas
