@@ -2,19 +2,35 @@
   {{title}}
 </h1>
 <div class="container">
-    <div style="max-height: 700px; overflow-x: hidden; overflow-y: auto" 
-        *ngFor="let msg of messages | async; let i = index; trackBy: trackByFn">
-        <div [ngClass]="{ 'text-right' : (i+1)%2 === 0 }">
-            <strong> {{(msg.nombre || msg.name)}}</strong><br>
-            Said: <i>{{msg.msg}}</i>
+    <div style="max-height: 500px; overflow-x: hidden; overflow-y: auto">
+        <div style="margin-right: 10px" *ngFor="let msg of messages | async; let i = index; trackBy: trackByFn">
+             <div style="padding: 5px" [ngClass]="{ 'text-right bk' : (i+1)%2 === 0 }">
+                <div style="font-size: 10px" class="text-muted">{{msg.date | date: 'medium'}}</div>
+                <strong> {{(msg.nombre || msg.name)}}</strong><br>
+                Said: <i>{{msg.msg}}</i>
+            </div>
         </div>
     </div>
-    <form (ngSubmit) = "sendMessage(msg.value); msg.value = ''">
-        <div class="input-group" style="padding-top: 15px">
-            <input type="text" name="msg" #msg class="form-control" placeholder="Text of message..." required>
-          <span class="input-group-btn">
-              <button class="btn btn-default" type="submit">Send</button>
-          </span>
+    <form novalidate (ngSubmit)="sendMessage(msg.value); msg.value = ''">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="input-group" style="padding-top: 15px">
+                    <input type="text" name="filter" #filterBox class="form-control" placeholder="name of the author..." required>
+                  <span class="input-group-btn">
+                      <button class="btn btn-default" type="button" (click) = "filter(filterBox.value)">Filter</button>
+                  </span>
+                </div>
+            </div>
+            <div class="col-lg-8">
+                <div class="input-group" style="padding-top: 15px">
+                    <span class="input-group-addon" id="basic-addon1">@{{autor}}</span>
+                    <input type="text" name="msg" #msg class="form-control" placeholder="Text of message..." required>
+                  <span class="input-group-btn">
+                      <button class="btn btn-default" type="submit">Send</button>
+                  </span>
+                </div>
+            </div>
         </div>
+        
     </form>
 </div>

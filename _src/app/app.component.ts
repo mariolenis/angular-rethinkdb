@@ -27,9 +27,16 @@ export class AppComponent {
         // Create an object attached to table 'chat'
         this.messages = this.ar.list('chat', this.query$);
         
-        // Filter | Order | limit
         this.query$.next({
-            orderBy: 'date'
+            orderBy: 'date',
+            limit: 100
+        });
+        
+    }
+    
+    filter(author: string): void {
+        this.query$.next({
+            filter: {name: author}
         });
     }
     
