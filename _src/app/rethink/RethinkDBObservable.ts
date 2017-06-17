@@ -51,12 +51,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             .flatMap(socket => this.listenFromBackend(socket))
             
             // If query$ has next value, will trigger a new query without modifying the subscription filter in backend
-            .flatMap(() => {
-                if (!!this.query$)
-                    return this.query$;
-                else
-                    return Observable.of(undefined);
-            })
+            .flatMap(() => (!!this.query$ ? this.query$ : Observable.of(undefined)) )
             
             // Register the change's listener
             .switchMap(query => this.registerListener(socket, query))
