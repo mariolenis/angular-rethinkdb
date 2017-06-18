@@ -28,10 +28,12 @@ export class AppComponent {
         this.messages = this.ar.list('chat', this.query$);
         
         this.query$.next({
-            orderBy: 'date',
+            orderBy: {
+                index: 'date',
+                desc: true
+            },
             limit: 100
         });
-        
     }
     
     filter(author: string): void {

@@ -16,8 +16,8 @@ import { AppComponent } from './app.component';
     HttpModule,
     AngularRethinkDBModule.forRoot({
         api_key: 'AAAA-BBBBB-CCCCC',
-        database: 'realtime',
-        host: 'http://zelcius.com:3200'
+        database: 'flownter',
+        host: 'http://localhost:3200'
     })
   ],
   providers: [],

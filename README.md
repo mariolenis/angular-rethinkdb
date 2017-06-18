@@ -58,7 +58,10 @@ export class Component {
         // according to the next value of query
         this.myQuery$.next({
             limit: 100,
-            orderBy: 'lastUpdate',
+            orderBy: {
+                index: 'lastUpdate',
+                desc: true
+            },
             filter: {
                 name: 'some name'
             }

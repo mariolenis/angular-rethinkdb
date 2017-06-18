@@ -13,7 +13,7 @@ export interface IRethinkObject {
 
 export interface IRethinkDBQuery {
     limit?: number,
-    orderBy?: string,
+    orderBy?: {index: string, desc?: boolean},
     filter?: Object
 }
 
