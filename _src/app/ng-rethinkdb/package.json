@@ -1,0 +1,25 @@
+{
+  "name": "ng-rethinkdb",
+  "version": "0.0.1-alpha",
+  "description": "Angular realtime module for RethinkDB",
+  "main": "index.js",
+  "scripts": {
+    "transpile": "ngc",
+    "package": "rollup -c",
+    "minify": "uglifyjs dist/bundles/ng_rethinkdb.umd.js --screw-ie8 --compress --mangle --comments --output dist/bundles/ng_rethinkdb.umd.min.js",
+    "build": "npm run transpile && npm run package && npm run minify"
+  },
+  "author": "Jorge Mario Lenis",
+  "license": "ISC",
+  "devDependencies": {
+    "@angular/compiler": "^5.0.1",
+    "@angular/compiler-cli": "^5.0.1",
+    "@types/socket.io-client": "^1.4.31",
+    "rollup": "^0.51.3",
+    "typescript": "^2.6.1",
+    "uglify-js": "^3.1.8"
+  },
+  "dependencies": {
+    "socket.io-client": "^2.0.4"
+  }
+}
