@@ -11,7 +11,7 @@ In order to use this, you will need to build a backend seervice for RethinkDB, _
 https://github.com/mariolenis/rethinkdb-daas
 ```js
 ...
-import {AngularRethinkDBModule} from 'angular-rethinkdb';
+import {AngularRethinkDBModule} from 'ng-rethinkdb';
 
 @NgModule({
   declarations: [...],
