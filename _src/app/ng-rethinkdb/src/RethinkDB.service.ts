@@ -2,12 +2,14 @@ import {Injectable} from '@angular/core';
 import {AngularRethinkDBObservable} from './RethinkDBObservable';
 import {IRethinkDBQuery, IRethinkDBAPIConfig} from './interfaces';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+import { Observable } from 'rxjs/Observable';
 
 export class RethinkDBAPIConfig implements IRethinkDBAPIConfig {
-    api_key: string;
-    database: string;
     host?: string;
     port?: number;
+    api_key: string;
+    database: string;
+    auth_table: string;
 }
 
 @Injectable()
@@ -26,5 +28,18 @@ export class AngularRethinkDBService {
      */
     list(table: string, query$?: BehaviorSubject<IRethinkDBQuery>): AngularRethinkDBObservable<any> {
         return new AngularRethinkDBObservable<any>(this.config, table, query$);
+    }
+
+    auth<T>(userid: string, password: string): Observable<T> {
+        
+        return Observable.of({} as T);
+    }
+
+    authFacebook(): Observable<boolean> {
+        return Observable.of(true);
+    }
+
+    authGoogle(): Observable<boolean> {
+        return Observable.of(true);
     }
 }
