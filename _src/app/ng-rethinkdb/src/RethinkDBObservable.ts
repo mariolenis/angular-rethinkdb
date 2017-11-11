@@ -91,7 +91,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
             // TODO: if query exists and orderBy is present, should order array according to it
             // Listen events fired to this.table
             socketSpace.on(this.table, (predata: string) => {
-                const data: {new_val: T, old_val: T, init?: T[]} = JSON.parse(predata);
+                const data: {new_val: T, old_val: T, init?: T[], err?: string} = JSON.parse(predata);
                 
                 // Current "state"
                 const db = this.db$.value;
@@ -100,6 +100,9 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> {
                 if (!!data.init) {
                     this.db$.next(data.init);
 
+                } else if (!!data.err) {
+                    this.db$.error(data.err);
+                    
                 } else { 
                     // New data
                     if (!data.old_val && !!data.new_val) {
