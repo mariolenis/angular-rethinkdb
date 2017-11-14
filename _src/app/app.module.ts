@@ -16,7 +16,8 @@ import { AngularRethinkDBModule } from './ng-rethinkdb';
         api_key: 'AAAA-BBBBB-CCCCC',
         database: 'flownter',
         auth_table: 'usuario',
-        host: 'http://192.168.10.139:3100'
+        host: 'http://localhost',
+        port: 3100
     })
   ],
   providers: [],
