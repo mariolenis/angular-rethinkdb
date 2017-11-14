@@ -3,6 +3,7 @@ import {Observable} from 'rxjs/Observable';
 export interface IRethinkDBAPIConfig {
     api_key: string;
     database: string;
+    auth_table?: string;
     host?: string;
     port?: number;
 }
@@ -30,4 +31,12 @@ export interface IRethinkResponse {
 
 export interface IResponse<T> {
     json: () => Promise<T>;
+}
+
+export interface IAuthStrategies {
+    autheticate(user: string, password: string): Observable<boolean>;
+    createUser(user: Object): Observable<IRethinkResponse>;
+    authWithFacebook(): Observable<boolean>;
+    authWithGoogle(): Observable<boolean>;
+    logout(): Observable<boolean>;
 }

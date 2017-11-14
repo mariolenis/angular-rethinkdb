@@ -5,7 +5,7 @@ export {AngularRethinkDBService} from './RethinkDB.service';
 export {AngularRethinkDBObservable} from './RethinkDBObservable';
 
 @NgModule({
-    providers: [AngularRethinkDBService ]
+    providers: [ AngularRethinkDBService ]
 })
 export class AngularRethinkDBModule { 
     static forRoot(config: RethinkDBAPIConfig): ModuleWithProviders {

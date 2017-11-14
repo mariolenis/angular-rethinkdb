@@ -33,6 +33,15 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
         this.API_URL = (!!rethinkdbConfig.host ? rethinkdbConfig.host : '') + (!!rethinkdbConfig.port ? ':' + rethinkdbConfig.port : '');
     }
 
+    private socketReconnect(socket: SocketIOClient.Socket): Observable<string> {
+        return new Observable((o: Observer<string>) => {
+            socket.on('reconnect', () => {
+                o.next('Reconecting...');
+            })
+            o.next('');
+        });
+    }
+
     /**
      * @description Function to process data received from backend
      * @param predata 
@@ -230,8 +239,11 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
             .map( API_URL => {
                 this.socket = io(API_URL);
                 this.socket.on(this.table, this.socketDataHandler.bind(this));
-                return true;
+                return this.socket;
             })
+
+            // In case of reconnection
+            .flatMap(socket => this.socketReconnect(socket))
 
             // If query$ has next value, will trigger a new query modifying the subscription filter in backend
             .flatMap(() => (!!this.query$ ? this.query$ : Observable.of(undefined)))
