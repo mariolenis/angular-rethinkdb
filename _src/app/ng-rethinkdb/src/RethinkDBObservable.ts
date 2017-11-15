@@ -24,6 +24,12 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
     // Socket
     private socket: SocketIOClient.Socket;
 
+    /**
+     * 
+     * @param rethinkdbConfig IRethinkDBAPIConfig
+     * @param table string
+     * @param query$ BehaviorSubject<IRethinkDBQuery>
+     */
     constructor(
         private rethinkdbConfig: IRethinkDBAPIConfig,
         private table: string, 
@@ -31,79 +37,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
     ) {
         super([]);
         this.API_URL = (!!rethinkdbConfig.host ? rethinkdbConfig.host : '') + (!!rethinkdbConfig.port ? ':' + rethinkdbConfig.port : '');
-    }
-
-    private socketReconnect(socket: SocketIOClient.Socket): Observable<string> {
-        return new Observable((o: Observer<string>) => {
-            socket.on('reconnect', () => {
-                o.next('Reconecting...');
-            })
-            o.next('');
-        });
-    }
-
-    /**
-     * @description Function to process data received from backend
-     * @param predata 
-     */
-    private socketDataHandler(predata: string) {
-        const data: {new_val: T, old_val: T, err?: string} = JSON.parse(predata);
-
-        // Current "state"
-        const db = super.getValue();
-
-        // Clear the current "state"
-        if (!data.old_val && !data.new_val && db.length > 0) {
-            super.next([])
-
-        } else if (!!data.err) {
-            super.error(data.err);
-            
-        } else { 
-            // New data
-            if (!data.old_val && !!data.new_val) {
-                super.next([data.new_val, ...db]);
-            
-            // Update data
-            } else if (!!data.old_val && !!data.new_val && db.filter(object => object.id === data.new_val.id).length > 0) {
-                super.next([
-                    ...db.filter(object => object.id !== data.old_val.id),
-                    data.new_val
-                    ]
-                );
-            
-            // Delete data
-            } else if (!!data.old_val && !data.new_val) {
-                super.next([
-                    ...db.filter(object => object.id !== data.old_val.id)
-                ]);
-            }
-        }
-    }
-
-    /**
-     * @description Emits join message to room related with changes on db.table
-     * @param <Socket> socket
-     * @param <IRethinkDBAPIConfig> dbApiConfig
-     * @param <Object> query
-     * @returns Observable<Socket>
-     * @throws Observable error if the request is unauthorized
-     */
-    private register(socket: SocketIOClient.Socket, dbApiConfig: IRethinkDBAPIConfig, query: Object): Observable<any> {
-        return new Observable((o: Observer<string>) => {
-            
-            // Connect de socket to the host to validate
-            socket.emit('register', JSON.stringify([dbApiConfig, query]), (response: string) => {
-                const res: {err: string, msj: string} = JSON.parse(response);
-                if (res.err) {
-                    o.error(res.err);
-                } else {
-                    o.next(res.msj);
-                }
-                o.complete();
-            });
-
-        });
     }
 
     /**
@@ -238,6 +171,85 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
     }
 
     /**
+     * @description Emits messages when is called by firts and everytime it get reconnects from client.
+     * @param socket 
+     */
+    private socketReconnectionHandler(socket: SocketIOClient.Socket): Observable<string> {
+        return new Observable((o: Observer<string>) => {
+            socket.on('reconnect', () => {
+                console.log('rec')
+                o.next('Reconecting...');                
+            });
+            
+            o.next('start');
+        });
+    }
+
+    /**
+     * @description Function to process data received from backend
+     * @param predata 
+     */
+    private socketDataHandler(predata: string) {
+        const data: {new_val: T, old_val: T, err?: string} = JSON.parse(predata);
+
+        // Current "state"
+        const db = super.getValue();
+
+        // Clear the current "state"
+        if (!data.old_val && !data.new_val && db.length > 0) {
+            super.next([])
+
+        } else if (!!data.err) {
+            super.error(data.err);
+            
+        } else { 
+            // New data
+            if (!data.old_val && !!data.new_val) {
+                super.next([data.new_val, ...db]);
+            
+            // Update data
+            } else if (!!data.old_val && !!data.new_val && db.filter(object => object.id === data.new_val.id).length > 0) {
+                super.next([
+                    ...db.filter(object => object.id !== data.old_val.id),
+                    data.new_val
+                    ]
+                );
+            
+            // Delete data
+            } else if (!!data.old_val && !data.new_val) {
+                super.next([
+                    ...db.filter(object => object.id !== data.old_val.id)
+                ]);
+            }
+        }
+    }
+
+    /**
+     * @description Emits join message to room related with changes on db.table
+     * @param <Socket> socket
+     * @param <IRethinkDBAPIConfig> dbApiConfig
+     * @param <Object> query
+     * @returns Observable<Socket>
+     * @throws Observable error if the request is unauthorized
+     */
+    private register(socket: SocketIOClient.Socket, dbApiConfig: IRethinkDBAPIConfig, query: Object): Observable<any> {
+        return new Observable((o: Observer<string>) => {
+            
+            // Connect de socket to the host to validate
+            socket.emit('register', JSON.stringify([dbApiConfig, query]), (response: string) => {
+                const res: {err: string, msj: string} = JSON.parse(response);
+                if (res.err) {
+                    o.error(res.err);
+                } else {
+                    o.next(res.msj);
+                }
+                o.complete();
+            });
+
+        });
+    }
+
+    /**
      * @description Add operations to the super.subscribe
      * @param subscriber 
      */    
@@ -251,7 +263,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
             })
 
             // In case of reconnection, 
-            .flatMap(socket => this.socketReconnect(socket))
+            .flatMap(socket => this.socketReconnectionHandler(socket))
 
             // If query$ has next value, will trigger a new query modifying the subscription filter in backend
             .flatMap(() => (!!this.query$ ? this.query$ : Observable.of(undefined)))
