@@ -50,23 +50,23 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
         const data: {new_val: T, old_val: T, err?: string} = JSON.parse(predata);
 
         // Current "state"
-        const db = this.value;
+        const db = super.getValue();
 
         // Clear the current "state"
         if (!data.old_val && !data.new_val && db.length > 0) {
-            this.next([])
+            super.next([])
 
         } else if (!!data.err) {
-            this.error(data.err);
+            super.error(data.err);
             
         } else { 
             // New data
             if (!data.old_val && !!data.new_val) {
-                this.next([data.new_val, ...db]);
+                super.next([data.new_val, ...db]);
             
             // Update data
             } else if (!!data.old_val && !!data.new_val && db.filter(object => object.id === data.new_val.id).length > 0) {
-                this.next([
+                super.next([
                     ...db.filter(object => object.id !== data.old_val.id),
                     data.new_val
                     ]
@@ -74,7 +74,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
             
             // Delete data
             } else if (!!data.old_val && !data.new_val) {
-                this.next([
+                super.next([
                     ...db.filter(object => object.id !== data.old_val.id)
                 ]);
             }
@@ -104,6 +104,10 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
             });
 
         });
+    }
+
+    next(value: T[]) {
+
     }
 
     /**
