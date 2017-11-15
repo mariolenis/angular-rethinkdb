@@ -37,7 +37,7 @@ export class RethinkDbAuthStrategies {
      * @param password 
      * @returns true or false
      */
-    authenticate(user: string, password: string): Observable<boolean> {
+    authenticate(user: string, password: string): Observable<string> {
         return Observable.fromPromise(
             fetch(this.API_URL + '/api/authUser', {
                 method: 'POST',
@@ -51,14 +51,7 @@ export class RethinkDbAuthStrategies {
         .switchMap(response => {              
             return Observable.fromPromise(response.json())
                 .flatMap(json => response.status >= 400 ? Observable.throw(json) : Observable.of(json))
-                .map((json: {token: string, err?: string}) => {
-                    if (!!json.token){
-                        sessionStorage.setItem('__token__', json.token)
-                        sessionStorage.setItem('__user__', user)
-                        return !!json.token
-                    }
-                    return !!json.token;
-                })
+                .map((json: {token: string, err?: string}) => json.token)
         })
     }
 
@@ -78,11 +71,11 @@ export class RethinkDbAuthStrategies {
         return Observable.of(true);
     }
 
-    isAuthenticated(): Observable<boolean>  {
+    isAuthenticated(token: string): Observable<boolean> {
         return Observable.fromPromise(
             fetch(this.API_URL + '/api/isAuth', {
                 method: 'POST',
-                body: JSON.stringify([this.confParams, sessionStorage.getItem('__token__')]),
+                body: JSON.stringify([this.confParams, token]),
                 headers: new Headers({
                     'Accept': 'application/json, text/plain, */*',
                     'Content-Type': 'application/json'
@@ -92,20 +85,9 @@ export class RethinkDbAuthStrategies {
         .switchMap(response => {
             return Observable.fromPromise(response.json())
                 .flatMap(json => response.status >= 400 ? Observable.throw(json) : Observable.of(json))
-                .map((json: {msj: string, err?: string}) => {
-                    return !!json.msj;
-                })
+                .map((json: {msj: string, err?: string}) => !!json.msj)
             }               
-        )
+        );
     }
-
-    /**
-     * @description
-     * @returns Observable boolean
-     */
-    logout(): Observable<boolean> {
-        sessionStorage.removeItem('__token__');
-        sessionStorage.removeItem('__user__');
-        return Observable.of(true);
-    }
+    
 }
