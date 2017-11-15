@@ -106,8 +106,12 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
         });
     }
 
-    next(value: T[]) {
-
+    /**
+     * @description Not implemented yet
+     * @param value 
+     */
+    next(value: T[]): void {
+        console.log('This procedure can erase all data in your table, be carefull');
     }
 
     /**
