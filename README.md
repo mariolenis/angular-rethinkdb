@@ -1,4 +1,4 @@
-# angular-rethinkdb
+# ng-rethinkdb
 This is an Angular module for RethinkDB NoSQL realtime database using Observables and Socket.io-client, this is based and influenced by AngularFire2 module created by 
 __David East__ so, thanks to him. 
 
@@ -116,6 +116,7 @@ export class Component {
         // ****************************** Authentication Strategies ******************************
         // This strategies will use an auth table defined in the root module 
         // auth_table: 'my-table-to-auth'
+        // ***************************************************************************************
 
         // Create a new user
         this.ar.auth().createUser({id: user, pass: password})
@@ -141,7 +142,6 @@ export class Component {
                 error => console.error('Err:', error)
             );
 
-        // ****************************** Authentication Strategies [END] ******************************
     }
 }
 ```
