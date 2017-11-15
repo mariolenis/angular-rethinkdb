@@ -20,6 +20,7 @@ import {AngularRethinkDBModule} from 'ng-rethinkdb';
     AngularRethinkDBModule.forRoot({
         api_key: 'AAAA-BBBBB-CCCCC',
         database: 'your-db',
+        auth_table: 'my-table-to-auth'
         host: '<http | https>://<your-host><:port>'
     })
   ],
@@ -33,7 +34,7 @@ export class AppModule { }
 ### Component Then
 ```js
 ...
-import {AngularRethinkDBService, AngularRethinkDBObservable, IRethinkDBQuery} from 'angular-rethinkdb';
+import {AngularRethinkDBService, AngularRethinkDBObservable, IRethinkDBQuery} from 'ng-rethinkdb';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
 
 interface IMyObjectType {
@@ -54,6 +55,10 @@ export class Component {
         // this.ar.list(table : string, query$? : BehaviorSubject<IRethinkDBQuery>)
         this.myTable = this.ar.list('myTable', this.myQuery$);
 
+        // Subscribe to your object and listen to data
+        const tableSubs = this.myTable
+            .subscribe(data => console.log(data));
+        
         // Query data will register a new filter and only will listen to changes 
         // according to the next value of query
         this.myQuery$.next({
@@ -67,9 +72,8 @@ export class Component {
             }
         });
 
-        // Subscribe to your object and listen to data
-        this.myTable
-            .subscribe(data => console.log(data));
+        // Get the current query result
+        console.log('Current query result', this.myTable.value);
 
         // Push data
         let myNewData: IMyObjectType = {...};
@@ -105,6 +109,9 @@ export class Component {
                 response => console.log(response),
                 error => console.warn(error)
             );
+
+        // Destroy the observable, close the realtime listener
+        tableSubs.unsubscribe();
     }
 }
 ```
