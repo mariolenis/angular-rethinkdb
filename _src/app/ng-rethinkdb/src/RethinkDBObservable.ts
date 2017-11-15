@@ -2,7 +2,7 @@ import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Subscription } from 'rxjs/Subscription';
 import { Subscriber } from 'rxjs/Subscriber';
 import { Observable } from 'rxjs/Observable';
-import { Observer } from 'rxjs/Observer';
+import { Observer, PartialObserver } from 'rxjs/Observer';
 import * as io from 'socket.io-client';
 
 import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces';
@@ -230,10 +230,10 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
     }
 
     /**
-     * @description Add functions to the super.subscribe
+     * @description Add operations to the super.subscribe
      * @param subscriber 
-     */
-    protected _subscribe(subscriber: Subscriber<T[]>): Subscription {
+     */    
+    subscribe(destinationOrNext?: PartialObserver<T[]> | ((value: T[]) => void), error?: (e?: any) => void, complete?: () => void): Subscription {
         // Starts
         Observable.of(this.API_URL)
             .map( API_URL => {
@@ -242,7 +242,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
                 return this.socket;
             })
 
-            // In case of reconnection
+            // In case of reconnection, 
             .flatMap(socket => this.socketReconnect(socket))
 
             // If query$ has next value, will trigger a new query modifying the subscription filter in backend
@@ -253,15 +253,31 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
 
             .subscribe();
 
-        return super._subscribe(subscriber);
-    }
-
-    /**
-     * @description Close the socket and deregister 
-     */
-    unsubscribe() {
-        this.socket.disconnect();
-        super.unsubscribe();
+        if (typeof destinationOrNext !== 'function') {
+            super.subscribe((destinationOrNext as PartialObserver<any>));
+        } else {
+            super.subscribe(destinationOrNext, error, complete);
+        }
+        // Creates a new kind of subscriber to close the socket
+        return new NGRSubscriber(this.socket, destinationOrNext, error, complete);
     }
     
+}
+
+class NGRSubscriber<T> extends Subscriber<T> {
+    
+    constructor(private socket: SocketIOClient.Socket, destinationOrNext?: PartialObserver<any> | ((value: T) => void), error?: (e?: any) => void, complete?: () => void) {
+        super(destinationOrNext, error, complete);
+    }
+
+    unsubscribe(): void {
+        if (this.socket.connected) {
+            this.socket.disconnect();
+        }
+        if (this.closed) {
+            return;
+        }
+        this.isStopped = true;
+        super.unsubscribe();
+    }
 }
