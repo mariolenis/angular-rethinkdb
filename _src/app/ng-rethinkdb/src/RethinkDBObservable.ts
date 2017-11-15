@@ -49,7 +49,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
 
     /**
      * @description function to push new data
-     * 
      * @param <T> newObject
      * @returns <Observable<IRethinkResponse>>
      */
@@ -85,7 +84,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
     
     /**
      * @description function to remove data
-     * 
      * @param <string | indexName: string, indexValue: strin> index
      * @returns <Observable<IRethinkResponse>>
      */
@@ -134,7 +132,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
 
     /**
      * @description function to update an object
-     * 
      * @param <T> object
      * @param <Object> optional filter 
      * @returns <Observable<IRethinkResponse>>
@@ -180,7 +177,6 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
                 console.log('rec')
                 o.next('Reconecting...');                
             });
-            
             o.next('start');
         });
     }
