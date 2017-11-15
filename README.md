@@ -20,7 +20,7 @@ import {AngularRethinkDBModule} from 'ng-rethinkdb';
     AngularRethinkDBModule.forRoot({
         api_key: 'AAAA-BBBBB-CCCCC',
         database: 'your-db',
-        auth_table: 'my-table-to-auth'
+        auth_table: 'my-table-to-auth',
         host: '<http | https>://<your-host><:port>'
     })
   ],
@@ -112,6 +112,36 @@ export class Component {
 
         // Destroy the observable, close the realtime listener
         tableSubs.unsubscribe();
+
+        // ****************************** Authentication Strategies ******************************
+        // This strategies will use an auth table defined in the root module 
+        // auth_table: 'my-table-to-auth'
+
+        // Create a new user
+        this.ar.auth().createUser({id: user, pass: password})
+            .subscribe(
+                response => console.log('Result', response),
+                error => console.error('Err:', error)
+            );
+        
+        // This observable next value will be token as response if auth is correct
+        // otherwise, will throw an error
+        this.ar.auth().authenticate(user, password)
+            .subscribe(
+                token => console.log('User authentication token', token),
+                error => console.error('Err:', error)
+            );
+
+        // Verify if user is authenticated
+        // next value will be true as response if user is authenticated
+        // otherwise, will throw an error
+        this.ar.auth().isAuthenticated(token)
+            .subscribe(
+                response => console.log('User is authenticated?', response),
+                error => console.error('Err:', error)
+            );
+
+        // ****************************** Authentication Strategies [END] ******************************
     }
 }
 ```
