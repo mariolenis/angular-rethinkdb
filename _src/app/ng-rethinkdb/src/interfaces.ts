@@ -31,6 +31,7 @@ export interface IRethinkResponse {
 
 export interface IResponse<T> {
     json: () => Promise<T>;
+    status: number;
 }
 
 export interface IAuthStrategies {

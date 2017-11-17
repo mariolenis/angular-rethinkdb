@@ -4,7 +4,6 @@ import { Subscriber } from 'rxjs/Subscriber';
 import { Observable } from 'rxjs/Observable';
 import { Observer, PartialObserver } from 'rxjs/Observer';
 import * as io from 'socket.io-client';
-import uuid from 'uuid/v4';
 
 import {IRethinkDBAPIConfig, IRethinkObject, IRethinkDBQuery, IRethinkResponse, IResponse} from './interfaces';
 
@@ -293,7 +292,7 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
 
 class NGRSubscriber<T> extends Subscriber<T> {
     
-    constructor(private socket: SocketIOClient.Socket, destinationOrNext?: PartialObserver<any> | ((value: T) => void), error?: (e?: any) => void, complete?: () => void){
+    constructor(private socket: SocketIOClient.Socket, destinationOrNext?: PartialObserver<any> | ((value: T) => void), error?: (e?: any) => void, complete?: () => void) {
         super(destinationOrNext, error, complete);
     }
 
