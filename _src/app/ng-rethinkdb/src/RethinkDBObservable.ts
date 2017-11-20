@@ -11,6 +11,7 @@ import 'rxjs/add/observable/of';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/fromPromise';
 
+import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/share';
@@ -37,15 +38,13 @@ export class AngularRethinkDBObservable<T extends IRethinkObject> extends Behavi
         // Connect to server and authenticate the connection
         this.listerner$ = Observable.of(io(this.API_URL + '?payload=' + JSON.stringify(this.rethinkdbConfig)))
 
+            .do(socket => this.socket = socket)
+        
             // Await connection is made to pass the connected socket or if reconnects
             .flatMap(socket => this.SocketConnectionHandler(socket))
         
             // Start listen data
-            .map(socket => {
-                this.socket = socket;
-                this.socket.on(socket.id, this.socketDataHandler.bind(this));
-                return socket;
-            })
+            .do(socket => this.socket.on(socket.id, this.socketDataHandler.bind(this)))
 
             // If query$ has next value, will trigger a new query modifying the subscription filter in backend
             .flatMap(() => (!!this.query$ ? this.query$ : Observable.of(undefined)))
